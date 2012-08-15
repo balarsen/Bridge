@@ -5,6 +5,8 @@ class hand(list):
     needs to build from a deck, get cards, know how many there are and collect points
     """
     def __init__(self, c):
+        if len(c) != 13:
+            raise(ValueError('wrong number of cards in a hard'))
         self.cards = c
         # careful here only one hard per call
         self.n_cards = len(self)
