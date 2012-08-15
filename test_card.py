@@ -1,5 +1,4 @@
 
-import StringIO
 import unittest
 
 import card

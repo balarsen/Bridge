@@ -13,18 +13,32 @@ class deck(list):
 
     def shuffle(self, num=1):
         for i in range(num):
-            random.shuffle(self.cards)
+            random.shuffle(self)
 
     def cut(self, place=None):
         if place == None:
             place = random.randint(1, 53)
-        dtmp = self.cards[place:]
+        dtmp = self[place:]
         dtmp.extend(self[:place])
-        self.cards = dtmp
+        self[:] = dtmp
 
     def deal(self):
-        h1 = self.cards[range(0,52,4)]
-        h2 = self.cards[range(1,52,4)]
-        h3 = self.cards[range(2,52,4)]
-        h4 = self.cards[range(3,52,4)]
+        h1 = self[0::4]
+        h2 = self[1::4]
+        h3 = self[2::4]
+        h4 = self[3::4]
         return hand(h1), hand(h2), hand(h3), hand(h4)
+
+    def __eq__(self, other):
+        """equal if cards in same order"""
+        for i in range(52):
+            if self[i] != other[i]:
+                return False
+        return True
+        
+    def __ne__(self, other):
+        if self == other:
+            return False
+        else:
+            return True
+    

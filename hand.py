@@ -7,7 +7,7 @@ class hand(list):
     def __init__(self, c):
         self.cards = c
         # careful here only one hard per call
-        self.n_cards = self.cards.shape[0]
+        self.n_cards = len(self)
         self.get_hc_points()
         self.n_suits()
         self.is_balanced()
