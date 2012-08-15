@@ -17,8 +17,8 @@ class TestCard(unittest.TestCase):
         """test boolean ops (total_ordering)"""
         expected = card.card(4,1)
         self.assertEqual(card.card(4,1), expected)
-        self.assertLessEqual(card.card(4,1), expected)
-        self.assertLessEqual(card.card(3,1), expected)
+        self.assertLess(card.card(3,1), expected)
+        self.assertGreater(card.card(5,1), expected)
 
 
 if __name__ == '__main__':

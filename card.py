@@ -6,11 +6,12 @@ class card(object):
     __version__ = '0.0.1'
     __author__ = 'Brian Larsen'
 
-    def __init__(self, v, s):
+    def __init__(self, v, s, trump=None):
         if not (v in values):
             raise(ValueError("Card has bad value"))
         if not (s in suits):
             raise(ValueError("Card has bad suit"))
+        self.trump = trump
         self.value = values[v]
         self.suit  = suits[s]
         self._hc = self._hc_points()
@@ -28,17 +29,23 @@ class card(object):
             return True
 
     def __lt__(self, other):
-        if self.suit > other.suit:
-            return True
-        if self.value < other.value:
+        if self.trump == other.trump:
+            if self.value < other.value:
+                return True
+        elif self.trump is not None:
             return False
-
+        else:
+            return True
+            
     def __gt__(self, other):
-        if self.suit < other.suit:
+        if self.trump == other.trump:
+            if self.value > other.value:
+                return True
+        elif self.trump is not None:
             return True
-        if self.value > other.value:
+        else:
             return False
-
+                    
     def _hc_points(self):
         tmp = values[self.value] - 10
         if tmp > 0:
