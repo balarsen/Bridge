@@ -1,27 +1,46 @@
 
+from __init__ import suits, values
 
-from value import value
-from suit import suit
 
-class card(suit, value):
+class card(object):
     __version__ = '0.0.1'
     __author__ = 'Brian Larsen'
 
     def __init__(self, v, s):
-
-        if not (v in value.values):
-            raise(Exception("Card has bad value"))
-        if not (s in suit.suits):
-            raise(Exception("Card has bad suit"))
-        self.value = value.values[v]
-        self.suit  = suit.suits[s]
+        if not (v in values):
+            raise(ValueError("Card has bad value"))
+        if not (s in suits):
+            raise(ValueError("Card has bad suit"))
+        self.value = values[v]
+        self.suit  = suits[s]
         self._hc = self._hc_points()
 
-    def _valid(self):
-        pass
+    def __eq__(self, other):
+        if self.suit == other.suit and self.value == other.value:
+            return True
+        else:
+            return False
+    
+    def __ne__(self, other):
+        if self == other:
+            return False
+        else:
+            return True
+
+    def __lt__(self, other):
+        if self.suit > other.suit:
+            return True
+        if self.value < other.value:
+            return False
+
+    def __gt__(self, other):
+        if self.suit < other.suit:
+            return True
+        if self.value > other.value:
+            return False
 
     def _hc_points(self):
-        tmp = value.values[self.value] - 10
+        tmp = values[self.value] - 10
         if tmp > 0:
             return tmp
         else:

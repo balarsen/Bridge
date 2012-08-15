@@ -1,6 +1,6 @@
 
 
-class hand(object):
+class hand(list):
     """
     needs to build from a deck, get cards, know how many there are and collect points
     """
