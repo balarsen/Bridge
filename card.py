@@ -6,7 +6,7 @@ class card(object):
     __version__ = '0.0.1'
     __author__ = 'Brian Larsen'
 
-    def __init__(self, v, s, trump=None):
+    def __init__(self, v, s, trump=False):
         if not (v in values):
             raise(ValueError("Card has bad value"))
         if not (s in suits):
@@ -30,18 +30,22 @@ class card(object):
 
     def __lt__(self, other):
         if self.trump == other.trump:
-            if self.value < other.value:
+            if values[self.value] < values[other.value]:
                 return True
-        elif self.trump is not None:
+            else:
+                return False
+        elif self.trump:
             return False
         else:
             return True
             
     def __gt__(self, other):
         if self.trump == other.trump:
-            if self.value > other.value:
+            if values[self.value] > values[other.value]:
                 return True
-        elif self.trump is not None:
+            else:
+                return False
+        elif self.trump:
             return True
         else:
             return False
