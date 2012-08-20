@@ -12,17 +12,14 @@ d = deck.deck()
 balanced = []
 points = []
 
-num = int(5e4)
+num = int(1e4)
 steps = num // 10
 for i in range(num):
     if (i+1) % steps == 0:
         print("%d of %d" % (i+1, num))
     d.shuffle(7)
     d.cut()
-    h1 = hand(d.deal()[0])
-    h2 = hand(d.deal()[1])
-    h3 = hand(d.deal()[2])
-    h4 = hand(d.deal()[3])
+    h1, h2, h3, h4 = d.deal()
     balanced.append([h1.balanced,
                      h2.balanced,
                      h3.balanced,
@@ -31,15 +28,34 @@ for i in range(num):
                    h2.hc_points,
                    h3.hc_points,
                    h4.hc_points])
+balanced = zip(*balanced)
 
 fig=plt.figure()
 ax=fig.add_subplot(111)
-ax.hist(balanced)
+ax.hist(balanced[0])
 ax.set_title('%d hands' % (num))
 ax.set_ylabel('Number of hands')
 ax.set_xticks([0., 1.])
 ax.set_xticklabels(['Unbalanced', 'balanced'])
-plt.draw()
+
+1/0
+
+# scatter, if I am balanced is my partner?
+# these need ot be counted !!!
+cnt = numpy.histogram2d(balanced[0], balanced[2])[0]
+
+fig=plt.figure()
+ax=fig.add_subplot(111)
+ax.scatter(balanced[0], balanced[2])
+ax.set_title('%d hands' % (num))
+ax.set_ylabel('Number of hands')
+ax.set_xticks([0., 1.])
+ax.set_xticklabels(['Unbalanced', 'balanced'])
+ax.set_yticks([0., 1.])
+ax.set_yticklabels(['Unbalanced', 'balanced'])
+
+
+1/0
 
 points = numpy.array(points)
 
