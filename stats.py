@@ -1,7 +1,7 @@
 from __future__ import division
 
 import deck
-from hand import hand
+from Hand import Hand
 import matplotlib.pyplot as plt
 import numpy
 
@@ -80,6 +80,6 @@ ax.axvline(13, lw=2, color='r')
 plt.draw()
 
 
-    
+
 
 

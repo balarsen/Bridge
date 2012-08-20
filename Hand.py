@@ -1,6 +1,6 @@
 
 
-class hand(list):
+class Hand(list):
     """
     needs to build from a deck, get cards, know how many there are and collect points
     """
@@ -51,7 +51,7 @@ class hand(list):
 
 
 
-        
-        
+
+
 
 
