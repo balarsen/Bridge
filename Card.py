@@ -2,7 +2,7 @@
 from __init__ import suits, values
 
 
-class card(object):
+class Card(object):
     __version__ = '0.0.1'
     __author__ = 'Brian Larsen'
 
@@ -21,7 +21,7 @@ class card(object):
             return True
         else:
             return False
-    
+
     def __ne__(self, other):
         if self == other:
             return False
@@ -38,7 +38,7 @@ class card(object):
             return False
         else:
             return True
-            
+
     def __gt__(self, other):
         if self.trump == other.trump:
             if values[self.value] > values[other.value]:
@@ -49,7 +49,7 @@ class card(object):
             return True
         else:
             return False
-                    
+
     def _hc_points(self):
         tmp = values[self.value] - 10
         if tmp > 0:

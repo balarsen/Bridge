@@ -1,7 +1,7 @@
 import random
 
-from card import card
-from hand import hand
+from Card import Card
+from Hand import Hand
 
 class deck(list):
     def __init__(self):
@@ -35,10 +35,10 @@ class deck(list):
             if self[i] != other[i]:
                 return False
         return True
-        
+
     def __ne__(self, other):
         if self == other:
             return False
         else:
             return True
-    
+
