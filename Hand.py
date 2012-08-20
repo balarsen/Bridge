@@ -21,7 +21,6 @@ class Hand(list):
 
     __repr__ = __str__
 
-
     def get_hc_points(self):
         tmp = sum([val._hc for val in self.cards])
         self.hc_points = tmp

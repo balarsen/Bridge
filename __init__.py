@@ -1,7 +1,7 @@
 suits = {'spades':1,
          'hearts':2,
-         'clubs':4,
-         'diamonds':3}
+         'diamonds':3,
+         'clubs':4,}
 tmp = dict( (val[1], val[0]) for val in suits.items())
 suits.update(tmp)
 
