@@ -7,7 +7,7 @@ from __init__ import suits
 
 
 class Trick(list):
-    def __init__(self, leader='north', trump=None):
+    def __init__(self, leader='north', trump='notrump'):
         self.leader=leader
         self.order = None
         if trump not in suits:

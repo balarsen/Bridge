@@ -7,6 +7,8 @@ class Card(object):
     __author__ = 'Brian Larsen'
 
     def __init__(self, v, s, trump=False):
+        if s == 'notrump':
+            raise(ValueError("Card has bad suit"))
         if not (v in values):
             raise(ValueError("Card has bad value"))
         if not (s in suits):
