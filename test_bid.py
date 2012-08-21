@@ -19,6 +19,8 @@ class TestBid(unittest.TestCase):
         self.assertRaises(ValueError, Bid.Bid, 2, 'bad')
         self.assertEqual(3, Bid.Bid(3, 'hearts').value)
         self.assertEqual(2, Bid.Bid(3, 'hearts').suit)
+        self.assertEqual('pass', Bid.Bid('pass', 'hearts').value)
+
 
     def test_eq_ne(self):
         self.assertTrue(self.b1 == self.b1)

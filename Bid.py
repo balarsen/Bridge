@@ -4,7 +4,7 @@ from __init__ import suits
 
 class Bid(object):
     def __init__(self, value, suit, trump=False):
-        if not (value in range(1,8)):
+        if not (value in range(1,8)+['pass']):
             raise(ValueError("Bid has bad value"))
         if not (suit in suits):
             raise(ValueError("Bid has bad suit"))
@@ -38,4 +38,13 @@ class Bid(object):
             return True
         else:
             return False
+
+    def __repr__(self):
+        if self.value == 'pass':
+            return '{value}'.format(value=self.value, suit=suits[self.suit])
+        else:
+            return '{value} {suit}'.format(value=self.value, suit=suits[self.suit])
+
+    __str__ = __repr__
+
 
