@@ -83,8 +83,9 @@ class TestTrick(unittest.TestCase):
         self.t_n.nextCard(Card.Card(3,3)) # north
         self.t_n.nextCard(Card.Card(5,2)) # east
         self.t_n.nextCard(Card.Card(7,3)) # south
+        self.assertRaises(IndexError, self.t_n.winner, )
         self.t_n.nextCard(Card.Card(9,3)) # west
-        self.assertEqual((Card.Card(5,2), 'east'), self.t_n.winner)
+        self.assertEqual((Card.Card(5,2), 'east'), self.t_n.winner())
 
 
 

@@ -32,7 +32,6 @@ class Trick(list):
         card.trump = trump
         self.append(card)
 
-    @property
     def winner(self):
         if len(self) != 4:
             raise(IndexError('Must have 4 cards in the trick'))
@@ -61,8 +60,7 @@ class Trick(list):
         ind = self._seats.index(position)
         return self[ind]
 
-    @property
-    def fancyRep(self):
+    def __repr__(self):
         """do a fancy printout"""
         ew_len = len('{0}    {1}'.format(self.west, self.east))
         outStr = ('{0:^' + str(ew_len)+ '}\n').format(self.north)
