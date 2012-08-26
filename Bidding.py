@@ -1,4 +1,5 @@
 
+from abc import ABCMeta, abstractmethod
 import numpy as np
 
 
@@ -6,6 +7,24 @@ import numpy as np
 this module is quite complicated, it will need to both do the mechanics of bidding
 but also allow for puggable "smarts" accordng to different conventions
 """
+
+class Bidding_logic(object):
+    __metaclass__ = ABCMeta
+
+    def __init__(self, hand): # create an instance per bidder
+        self.hand = hand
+
+    @abstractmethod
+    def openBid(self):
+        pass
+
+    @abstractmethod
+    def raiseBid(self):
+        pass
+
+    @abstractmethod
+    def jumpBid(self):
+        pass
 
 
 
@@ -51,6 +70,7 @@ class Bidding(list):
         subset of above, just goes in order
         """
         return self.addBid(self._seats[len(self)%4], bid)
+
 
 
 

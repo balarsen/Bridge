@@ -1,4 +1,4 @@
-
+import collections #.Counter as Counter
 
 class Hand(list):
     """
@@ -10,9 +10,15 @@ class Hand(list):
         self.cards = c
         # careful here only one hard per call
         self.n_cards = len(self)
-        self.get_hc_points()
+        self.n_suits()
+        self.balanced = None
+        self.distro = None
+        self.pps = collections.Counter() # points per suit
+        self._pps()
         self.n_suits()
         self.is_balanced()
+        # number of points per suit
+        # TODO do we need a longest instance variable?
 
     def __str__(self):
         self.sort()
@@ -21,9 +27,9 @@ class Hand(list):
 
     __repr__ = __str__
 
-    def get_hc_points(self):
-        tmp = sum([val._hc for val in self.cards])
-        self.hc_points = tmp
+    @property
+    def hc_points(self):
+        return sum(self.pps.values())
 
     def n_suits(self):
         suits = [val.suit for val in self.cards]
@@ -32,6 +38,13 @@ class Hand(list):
                   'diamonds':suits.count('diamonds'),
                   'clubs':suits.count('clubs')}
         self.distro = distro
+
+    def _pps(self):
+        """
+        fill the Counter object, pps, with points per suit
+        """
+        for crd in self.cards:
+            self.pps += collections.Counter( {crd.suit:crd._hc} )
 
     def is_balanced(self):
         """
