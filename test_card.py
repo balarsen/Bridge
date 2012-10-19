@@ -37,10 +37,10 @@ class TestCard(unittest.TestCase):
         self.assertFalse(Card.Card(4,1, True) > Card.Card(10,1, True))
         self.assertFalse(Card.Card(4,1, False) > Card.Card(10,2, True))
 
-    def test_hc_points(self):
+    def test_hc(self):
         ans = [0]*9 + [1,2,3,4]
         for i, value in enumerate(range(2, 15)):
-            self.assertEqual(ans[i], Card.Card(value, 1)._hc_points())
+            self.assertEqual(ans[i], Card.Card(value, 1).hc)
 
     def test_str(self):
         c1 = Card.Card(12,1)

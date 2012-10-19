@@ -1,10 +1,11 @@
 
-from Table import index2pos, _positions
+from Table import index2pos
+from __init__ import positions
 
 
 class Trick(list):
     def __init__(self, leader='North', trump=None):
-        if leader not in _positions:
+        if leader not in positions:
             raise(ValueError('bad leader position: {0}'.format(leader)))
         self.leader = leader
         self.order  = None

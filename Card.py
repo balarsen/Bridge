@@ -14,7 +14,6 @@ class Card(object):
         self.trump = trump
         self.value = values[v]
         self.suit  = suits[s]
-        self._hc = self._hc_points()
 
     def __eq__(self, other):
         if self.suit == other.suit and self.value == other.value:
@@ -50,7 +49,8 @@ class Card(object):
         else:
             return False
 
-    def _hc_points(self):
+    @property
+    def hc(self):
         tmp = values[self.value] - 10
         if tmp > 0:
             return tmp

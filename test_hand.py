@@ -20,7 +20,6 @@ class TestHand(unittest.TestCase):
     def test_init(self):
         """test input checking"""
         self.assertTrue(hasattr(self.h1, "n_cards"))
-        self.assertTrue(hasattr(self.h1, "hc_points"))
         self.assertTrue(hasattr(self.h1, "distro"))
         self.assertTrue(hasattr(self.h1, "balanced"))
         self.assertRaises(ValueError, Hand.Hand, self.cards[1:])
@@ -28,7 +27,7 @@ class TestHand(unittest.TestCase):
     def test_str(self):
         self.assertTrue(isinstance(self.h1.__str__(), str))
 
-    def test_get_hc_points(self):
+    def test_get_hc(self):
         self.assertEqual(self.h1.hc_points, 10)
         self.assertEqual(self.h2.hc_points, 10)
         self.assertEqual(self.h3.hc_points, 10)

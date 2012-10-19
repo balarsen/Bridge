@@ -1,10 +1,11 @@
 
-_positions = ['North', 'East', 'South', 'West']
+from __init__ import positions
+
 
 class position(object):
     def __init__(self, pos):
-        if pos not in _positions:
-            raise(ValueError('Bad position input: {0}, must be {1}'.format(pos, _positions)))
+        if pos not in positions:
+            raise(ValueError('Bad position input: {0}, must be {1}'.format(pos, positions)))
         self.poisition = pos
         self.score = 0
 
@@ -23,8 +24,8 @@ def index2pos(leader, index):
     """
     given an index return the position of the winner
     """
-    start = _positions.index(leader)
+    start = positions.index(leader)
     ind = (index + start) % 4
-    return _positions[ind]
+    return positions[ind]
     
 

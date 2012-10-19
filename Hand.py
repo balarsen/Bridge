@@ -1,4 +1,6 @@
 
+from __init__ import suits
+
 
 class Hand(list):
     """
@@ -10,9 +12,6 @@ class Hand(list):
         self.cards = c
         # careful here only one hard per call
         self.n_cards = len(self)
-        self.get_hc_points()
-        self.n_suits()
-        self.is_balanced()
 
     def __str__(self):
         self.sort()
@@ -21,20 +20,50 @@ class Hand(list):
 
     __repr__ = __str__
 
+    @property
+    def longest(self):
+        """
+        the longest suit
+        """
+        points = {}
+        for suit in suits:
+            points[suit] = sum([1 for val in self.cards if val.suit == suit])
+        max = (0, None)
+        for key in points:
+            if points[key] > max[0]:
+                mx = (points[key], key)
+        return mx[1]
+                
+    @property
+    def strongest(self):
+        """
+        the strongest suit
+        """
+        points = {}
+        for suit in suits:
+            points[suit] = sum([val.hc for val in self.cards if val.suit == suit])
+        max = (0, None)
+        for key in points:
+            if points[key] > max[0]:
+                mx = (points[key], key)
+        return mx[1]
+        
+    @property
+    def hc_points(self):
+        tmp = sum([val.hc for val in self.cards])
+        return tmp
 
-    def get_hc_points(self):
-        tmp = sum([val._hc for val in self.cards])
-        self.hc_points = tmp
-
-    def n_suits(self):
+    @property
+    def distro(self):
         suits = [val.suit for val in self.cards]
         distro = {'spades':suits.count('spades'),
                   'hearts':suits.count('hearts'),
                   'diamonds':suits.count('diamonds'),
                   'clubs':suits.count('clubs')}
-        self.distro = distro
+        return distro        
 
-    def is_balanced(self):
+    @property
+    def balanced(self):
         """
         count the number of each suit looking for balanced hands
         balanced hands are 4,3,3,3  5,3,3,2  4,4,3,2
@@ -45,9 +74,9 @@ class Hand(list):
                tmp == [2,3,3,5],
                tmp == [3,3,3,4]]
         if any(bal):
-            self.balanced = True
+            return True
         else:
-            self.balanced = False
+            return False
 
 
 

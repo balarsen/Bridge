@@ -5,6 +5,7 @@ suits = {'spades':1,
 tmp = dict( (val[1], val[0]) for val in suits.items())
 suits.update(tmp)
 
+positions = ['North', 'East', 'South', 'West']
 
 values = {'two':2,
           'three':3,
