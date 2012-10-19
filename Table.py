@@ -9,6 +9,7 @@ class position(object):
         self.position = pos
         self.score = 0
 
+
 class Table(list):
     """
     class to hold the table and keep the overall score
@@ -27,5 +28,11 @@ def index2pos(leader, index):
     start = positions.index(leader)
     ind = (index + start) % 4
     return positions[ind]
-    
+   
+def pos2index(leader, pos):
+    """
+    given an index return the position of the winner
+    """
+    start = positions.index(leader)
+    return (positions.index(pos) - start) % 4
 
