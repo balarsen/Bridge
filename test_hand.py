@@ -17,6 +17,20 @@ class TestHand(unittest.TestCase):
         self.cards = [Card.Card(*v) for v in vals]
         self.hnd = Hand.Hand(self.cards)
 
+    def test_longest(self):
+        """longest should do as expected"""
+        self.assertEqual(self.h1.longest, 'spades')
+        self.assertEqual(self.h2.longest, 'hearts')
+        self.assertEqual(self.h3.longest, 'diamonds')
+        self.assertEqual(self.h4.longest, 'clubs')
+
+    def test_strongest(self):
+        """sringest has known output"""
+        self.assertEqual(self.h1.strongest, 'spades')
+        self.assertEqual(self.h2.strongest, 'hearts')
+        self.assertEqual(self.h3.strongest, 'diamonds')
+        self.assertEqual(self.h4.strongest, 'clubs')
+
     def test_init(self):
         """test input checking"""
         self.assertTrue(hasattr(self.h1, "n_cards"))

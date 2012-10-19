@@ -6,7 +6,7 @@ class position(object):
     def __init__(self, pos):
         if pos not in positions:
             raise(ValueError('Bad position input: {0}, must be {1}'.format(pos, positions)))
-        self.poisition = pos
+        self.position = pos
         self.score = 0
 
 class Table(list):
