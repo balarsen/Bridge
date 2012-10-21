@@ -1,7 +1,6 @@
 
 from __init__ import suits
 
-
 class Hand(list):
     """
     needs to build from a deck, get cards, know how many there are and collect points
@@ -13,7 +12,6 @@ class Hand(list):
         # careful here only one hard per call
         self.n_cards = len(self)
         
-
     def __str__(self):
         self.sort()
         lst = [val for val in self]
@@ -54,11 +52,7 @@ class Hand(list):
         """
         return the highest card in a hand
         """
-        high = self[0]
-        for v in self[1:]:
-            if v > high:
-                high = v
-        return high
+        return max(self)
 
     @property
     def longest(self):
@@ -68,11 +62,7 @@ class Hand(list):
         points = {}
         for suit in suits:
             points[suit] = sum([1 for val in self if val.suit == suit])
-        max = (0, None)
-        for key in points:
-            if points[key] > max[0]:
-                mx = (points[key], key)
-        return mx[1]
+        return max(points)
                 
     @property
     def strongest(self):
@@ -82,11 +72,7 @@ class Hand(list):
         points = {}
         for suit in suits:
             points[suit] = sum([val.hc for val in self if val.suit == suit])
-        max = (0, None)
-        for key in points:
-            if points[key] > max[0]:
-                mx = (points[key], key)
-        return mx[1]
+        return max(points)
         
     @property
     def hc_points(self):
