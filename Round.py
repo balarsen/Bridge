@@ -11,6 +11,8 @@ It needs to have pluggable playstyle for each player seperately
 from abc import ABCMeta, abstractmethod
 import itertools
 
+import Trick
+
 class HandLogic(object):
     """
     this is the logic that is used to play a hand
@@ -66,14 +68,16 @@ class Round(object):
         for ii, logi in enumerate(logics):
             self.logics.append(logi(self.hands[ii], self.trump))
 
-    def play_trick(self):
-        cards = [self.logics[0].lead()]
+    def play_trick(self, leader):
+        trick = Trick.Trick(leader, self.trump)
+        trick.nextCard(self.logics[0].lead())
         for pos in [1,2,3]:
-            cards.append(self.logics[pos].follow(list(cards)))
+            trick.nextCard(self.logics[pos].follow(trick))
 
-        for ii, c in enumerate(cards):
+        for ii, c in enumerate(trick):
             self.hands[ii].remove(c)
-        print cards
+        print trick, trick.winner()
+        return trick.winner()
 
 
 if __name__ == '__main__':
@@ -87,8 +91,15 @@ if __name__ == '__main__':
                 [h1,h2,h3,h4],
                 'spades',
                 [simpleHigh, simpleHigh, simpleHigh, simpleHigh])
-
-    
+    tricks = []
+    win = rnd.play_trick('North')
+    tricks.append(win[1])
+    for i in range(12):
+        win = rnd.play_trick(win[1])
+        tricks.append(win[1])
+    print ''
+    print 'N-S', sum([1 for v in tricks if v in ['North', 'South']]), 
+    print 'E-W', sum([1 for v in tricks if v in ['East', 'West']])
 
 
 
