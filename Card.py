@@ -6,14 +6,17 @@ class Card(object):
     __version__ = '0.0.1'
     __author__ = 'Brian Larsen'
 
-    def __init__(self, v, s, trump=False):
-        if not (v in values):
+    def __init__(self, value, suit, trump=False):
+        if suit == 'notrump':
+            raise(ValueError("Card has bad suit"))
+        if not (value in values):
             raise(ValueError("Card has bad value"))
-        if not (s in suits):
+        if not (suit in suits):
             raise(ValueError("Card has bad suit"))
         self.trump = trump
-        self.value = values[v]
-        self.suit  = suits[s]
+        self.value = values[value]
+        self.suit  = suits[suit]
+        self._hc = self._hc_points()
 
     def __eq__(self, other):
         if self.suit == other.suit and self.value == other.value:

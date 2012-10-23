@@ -1,0 +1,25 @@
+Bridge
+------
+
+This is an ongoing (slow) project meant to be able to automatically play bridge 
+and collect statistics on various strategies.  
+
+
+Roadmap
+-------
+In Progress/Done
+================
+- basic structure of the game, cards, decks, hands, tricks
+- Setup of the <, >, = operators so that cards and bids can be compared
+
+To Do
+=====
+- Implement basic logic in playing a hand
+- Implement basic logic in bidding
+- Implement a modular system for playing and bidding strategies
+
+
+
+
+
+

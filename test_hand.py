@@ -55,6 +55,8 @@ class TestHand(unittest.TestCase):
         self.assertFalse(self.h4.balanced)
         self.assertTrue(self.hnd.balanced)
 
+    # TODO add test_pps!!
+
 
 if __name__ == '__main__':
     unittest.main()

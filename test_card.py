@@ -8,6 +8,7 @@ class TestCard(unittest.TestCase):
         """input checking"""
         self.assertRaises(ValueError, Card.Card, 15, 'hearts')
         self.assertRaises(ValueError, Card.Card, 'bad', 'hearts')
+        self.assertRaises(ValueError, Card.Card, 4, 'notrump')
         self.assertRaises(ValueError, Card.Card, 12, 'bad')
         self.assertRaises(ValueError, Card.Card, 'ace', 'bad')
         self.assertEqual('two', Card.Card(2, 1).value)

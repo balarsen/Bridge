@@ -36,3 +36,32 @@ class Trick(list):
     def nCards(self):
         return len(self)
 
+    @property
+    def north(self):
+        return self.getCard('north')
+
+    @property
+    def south(self):
+        return self.getCard('south')
+
+    @property
+    def east(self):
+        return self.getCard('east')
+
+    @property
+    def west(self):
+        return self.getCard('west')
+
+    def getCard(self, position):
+        ind = self._seats.index(position)
+        return self[ind]
+
+    def __repr__(self):
+        """do a fancy printout"""
+        ew_len = len('{0}    {1}'.format(self.west, self.east))
+        outStr = ('{0:^' + str(ew_len)+ '}\n').format(self.north)
+        outStr += '{0}    '.format(self.west)
+        outStr += '{0}\n'.format(self.east)
+        outStr += ('{0:^' + str(ew_len)+ '}\n').format(self.south)
+        return outStr
+
