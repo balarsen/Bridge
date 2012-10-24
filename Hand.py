@@ -1,6 +1,7 @@
 
 from __init__ import suits
 import collections #.Counter as Counter
+import operator
 
 class Hand(list):
     """
@@ -12,15 +13,6 @@ class Hand(list):
         super(Hand, self).__init__(c)
         # careful here only one hard per call
         self.n_cards = len(self)
-        self.n_suits()
-        self.balanced = None
-        self.distro = None
-        self.pps = collections.Counter() # points per suit
-        self._pps()
-        self.n_suits()
-        self.is_balanced()
-        # number of points per suit
-        # TODO do we need a longest instance variable?
 
     def __str__(self):
         self.sort()
@@ -69,23 +61,20 @@ class Hand(list):
         """
         the longest suit
         """
-        points = {}
-        for suit in suits:
-            points[suit] = sum([1 for val in self if val.suit == suit])
-        return max(points)
-                
+        return max(self.distro.iteritems(), key=operator.itemgetter(1))[0]
+
     @property
     def strongest(self):
         """
         the strongest suit
         """
-        points = {}
-        for suit in suits:
-            points[suit] = sum([val.hc for val in self if val.suit == suit])
-        return max(points)
+        pps = collections.Counter()
+        for crd in self:
+            pps += collections.Counter( {crd.suit:crd.hc} )
+        return max(pps)
         
     @property
-    def hc_points(self):
+    def hc(self):
         tmp = sum([val.hc for val in self])
         return tmp
 

@@ -42,11 +42,11 @@ class TestHand(unittest.TestCase):
         self.assertTrue(isinstance(self.h1.__str__(), str))
 
     def test_get_hc(self):
-        self.assertEqual(self.h1.hc_points, 10)
-        self.assertEqual(self.h2.hc_points, 10)
-        self.assertEqual(self.h3.hc_points, 10)
-        self.assertEqual(self.h4.hc_points, 10)
-        self.assertEqual(self.hnd.hc_points, 0)
+        self.assertEqual(self.h1.hc, 10)
+        self.assertEqual(self.h2.hc, 10)
+        self.assertEqual(self.h3.hc, 10)
+        self.assertEqual(self.h4.hc, 10)
+        self.assertEqual(self.hnd.hc, 0)
 
     def test_is_balanced(self):
         self.assertFalse(self.h1.balanced)
