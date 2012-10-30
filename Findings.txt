@@ -1,0 +1,9 @@
+
+
+30-Oct-2012  4565f05929ec4664b93b279119f2284b15be76a8
+1) With a fixed trump and rotating deal "simpleHigh" logic leads to an average
+    of 6.5 tricks per side
+2) With a fixed trump and stationary deal "simpleHigh" logic leads to an average
+    if 7 tricks for the dealer and 6 tricks for the other side.
+
+
