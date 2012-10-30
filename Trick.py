@@ -15,7 +15,7 @@ class Trick(list):
         if self.nCards >= 4:
             raise(IndexError('Cannot have more than 4 cards in a trick'))
         if card in self:
-            raise(ValueError('Cannot play the same card twice in a trick')) 
+            raise(ValueError('Cannot play the same card twice in a trick'))
         card.trump = card.suit==self.trump
         self.append(card)
 
@@ -38,23 +38,28 @@ class Trick(list):
 
     @property
     def north(self):
-        return self.getCard('north')
+        return self.getCard('North')
 
     @property
     def south(self):
-        return self.getCard('south')
+        return self.getCard('South')
 
     @property
     def east(self):
-        return self.getCard('east')
+        return self.getCard('East')
 
     @property
     def west(self):
-        return self.getCard('west')
+        return self.getCard('West')
 
     def getCard(self, position):
-        ind = self._seats.index(position)
+        ind = self.index(position)
         return self[ind]
+
+    def __str__(self):
+        return 'Trick'
+
+    __repr__ = __str__
 
     def __repr__(self):
         """do a fancy printout"""

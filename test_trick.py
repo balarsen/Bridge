@@ -3,6 +3,7 @@ import unittest
 
 import Card
 import Trick
+from __init__ import positions
 
 class TestTrick(unittest.TestCase):
     def test_init(self):
