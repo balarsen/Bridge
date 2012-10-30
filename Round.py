@@ -76,7 +76,6 @@ class Round(object):
 
         for ii, c in enumerate(trick):
             self.hands[ii].remove(c)
-        print trick, trick.winner()
         return trick.winner()
 
 

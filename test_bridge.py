@@ -8,6 +8,7 @@ from test_trick import *
 from test_table import *
 from test_bid import *
 from test_bidding import *
+from test_round import *
 
 
 if __name__ == '__main__':
