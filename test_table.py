@@ -16,6 +16,15 @@ class TestTable(unittest.TestCase):
     def test_Table(self):
         """test Table class"""
         self.assertEqual(Table.Table().north.position, Table.position('North').position)
+
+    def test_pos2index(self):
+        """pos2index"""
+        self.assertEqual(0, Table.pos2index('North', 'North'))
+        self.assertEqual(1, Table.pos2index('North', 'East'))
+        self.assertEqual(2, Table.pos2index('North', 'South'))
+        self.assertEqual(3, Table.pos2index('North', 'West'))
+
+  
         
 
 if __name__ == '__main__':
