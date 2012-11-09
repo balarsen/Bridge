@@ -21,33 +21,46 @@ class Hand(list):
 
     __repr__ = __str__
 
+    def getSuit(self, suit):
+        """
+        return the list of cards that are the requested suit
+        """
+        if suit == 'clubs':
+            return self.clubs
+        if suit == 'spades':
+            return self.spades
+        if suit == 'diamonds':
+            return self.diamonds
+        if suit == 'hearts':
+            return self.hearts
+
     @property
     def clubs(self):
         """
         return all the clubs or ()
         """
-        return tuple([v for v in self if v.suit == 'clubs'])
+        return sorted(tuple([v for v in self if v.suit == 'clubs']), reverse=True)
 
     @property
     def spades(self):
         """
         return all the spades or ()
         """
-        return tuple([v for v in self if v.suit == 'spades'])
+        return sorted(tuple([v for v in self if v.suit == 'spades']), reverse=True)
 
     @property
     def hearts(self):
         """
         return all the hearts or ()
         """
-        return tuple([v for v in self if v.suit == 'hearts'])
+        return sorted(tuple([v for v in self if v.suit == 'hearts']), reverse=True)
 
     @property
     def diamonds(self):
         """
         return all the diamonds or ()
         """
-        return tuple([v for v in self if v.suit == 'diamonds'])
+        return sorted(tuple([v for v in self if v.suit == 'diamonds']), reverse=True)
 
     @property
     def highCard(self):
