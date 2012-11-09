@@ -11,7 +11,7 @@ import Bid
 
 class BeginningBidder(Bidding.Bidding_logic):
     def openBid(self):
-        if self.hand.hc < 14:
+        if self.hand.hc < 13:
             return Bid.Bid('pass', 'spades')
         # of they don't have 4 in the strongest don't lead that
         if self.hand.strongest[0][1] >= 4:
@@ -21,11 +21,10 @@ class BeginningBidder(Bidding.Bidding_logic):
         else:
             return Bid.Bid('pass', 'spades')
            
-    def raiseBid(self):
-        pass
+    def raiseBid(self, bids):
+        print "in raise logic"
 
-    def jumpBid(self):
-        pass
+    jumpBid = raiseBid
 
 
 if __name__ == '__main__':

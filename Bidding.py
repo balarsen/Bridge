@@ -8,6 +8,9 @@ this module is quite complicated, it will need to both do the mechanics of biddi
 but also allow for puggable "smarts" accordng to different conventions
 """
 
+class Redeal(Exception):
+    pass
+
 class Bidding_logic(object):
     __metaclass__ = ABCMeta
 
@@ -19,22 +22,26 @@ class Bidding_logic(object):
         pass
 
     @abstractmethod
-    def raiseBid(self):
+    def raiseBid(self, bids):
         pass
 
     @abstractmethod
-    def jumpBid(self):
+    def jumpBid(self, bids):
         pass
 
 
 
 class Bidding(list):
-    def __init__(self, leader='north'):
+    def __init__(self, hands, logic, leader='north'):
         self.leader=leader
         _seats = ['north', 'east', 'south', 'west']
         leader_ind = _seats.index(self.leader)
         self._seats = np.roll(['north', 'east', 'south', 'west'], leader_ind).tolist()
+        self._hands = hands
         self._passCount = 0
+        self.logic = []
+        for logic, hand in zip(logic, self._hands):
+            self.logic.append(logic(hand))
 
     def addBid(self, seat, bid):
         if self._passCount >= 4:  # done
@@ -53,6 +60,8 @@ class Bidding(list):
             self._passCount = 0
         self.append( (seat, bid) )
         if self._passCount >= 4:  # done
+            if not self.opened: # no one opened
+                raise(Redeal("No one opened"))
             return self._winningBid()
         else:
             return None
@@ -65,11 +74,40 @@ class Bidding(list):
             if bid.value != 'pass':
                 return (seat, bid)
 
-    def nextBid(self, bid):
+    def nextBid(self):
         """
         subset of above, just goes in order
         """
-        return self.addBid(self._seats[len(self)%4], bid)
+        if not self.opened:
+            return self.addBid(len(self)%4, self.logic[len(self)%4].openBid())
+        else:
+            return self.addBid(len(self)%4, self.logic[len(self)%4].raiseBid(self))
+            
+
+    @property
+    def opened(self):
+        """
+        return True if someonehas opened, False otherwise
+        """
+        for bid in self:
+            if bid[1].value != 'pass':
+                return True
+        return False
+        
+
+if __name__ == '__main__':
+    import Deck
+    import BeginningBidder
+    d1 = Deck.Deck()
+    d1.shuffle(7)
+    h1, h2, h3, h4 = d1.deal()
+    print h1.hc, h2.hc, h3.hc, h4.hc
+    b = Bidding( [h1, h2, h3, h4],
+                 [BeginningBidder.BeginningBidder,
+                  BeginningBidder.BeginningBidder,
+                  BeginningBidder.BeginningBidder,
+                  BeginningBidder.BeginningBidder] )
+
 
 
 
