@@ -42,6 +42,8 @@ class Bid(object):
     def __repr__(self):
         if self.value == 'pass':
             return '{value}'.format(value=self.value, suit=suits[self.suit])
+        elif self.value == 1:
+            return '{value} {suit}'.format(value=self.value, suit=suits[self.suit][:-1])
         else:
             return '{value} {suit}'.format(value=self.value, suit=suits[self.suit])
 
