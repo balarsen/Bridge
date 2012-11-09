@@ -60,18 +60,23 @@ class Hand(list):
     def longest(self):
         """
         the longest suit
+        TODO update this so that it returns a list of suits in order
         """
-        return max(self.distro.iteritems(), key=operator.itemgetter(1))[0]
+        cps = collections.Counter()
+        for crd in self:
+            cps += collections.Counter( {crd.suit} )
+        return list(cps)
 
     @property
     def strongest(self):
         """
         the strongest suit
+        TODO update this so that it returns a list of suits in order
         """
         pps = collections.Counter()
         for crd in self:
             pps += collections.Counter( {crd.suit:crd.hc} )
-        return max(pps)
+        return list(pps)
         
     @property
     def hc(self):
