@@ -19,17 +19,17 @@ class TestHand(unittest.TestCase):
 
     def test_longest(self):
         """longest should do as expected"""
-        self.assertEqual(self.h1.longest, ['spades'])
-        self.assertEqual(self.h2.longest, ['hearts'])
-        self.assertEqual(self.h3.longest, ['diamonds'])
-        self.assertEqual(self.h4.longest, ['clubs'])
+        self.assertEqual(self.h1.longest, [('spades', 13)])
+        self.assertEqual(self.h2.longest, [('hearts', 13)])
+        self.assertEqual(self.h3.longest, [('diamonds', 13)])
+        self.assertEqual(self.h4.longest, [('clubs', 13)])
 
     def test_strongest(self):
         """sringest has known output"""
-        self.assertEqual(self.h1.strongest, ['spades'])
-        self.assertEqual(self.h2.strongest, ['hearts'])
-        self.assertEqual(self.h3.strongest, ['diamonds'])
-        self.assertEqual(self.h4.strongest, ['clubs'])
+        self.assertEqual(self.h1.strongest, [('spades', 10)])
+        self.assertEqual(self.h2.strongest, [('hearts', 10)])
+        self.assertEqual(self.h3.strongest, [('diamonds', 10)])
+        self.assertEqual(self.h4.strongest, [('clubs', 10)])
 
     def test_init(self):
         """test input checking"""

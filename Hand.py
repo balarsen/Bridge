@@ -65,7 +65,7 @@ class Hand(list):
         cps = collections.Counter()
         for crd in self:
             cps += collections.Counter( {crd.suit} )
-        return list(cps)
+        return sorted(cps.items(), reverse=True, key=lambda x:x[1])
 
     @property
     def strongest(self):
@@ -76,7 +76,7 @@ class Hand(list):
         pps = collections.Counter()
         for crd in self:
             pps += collections.Counter( {crd.suit:crd.hc} )
-        return list(pps)
+        return sorted(pps.items(), reverse=True, key=lambda x:x[1])
         
     @property
     def hc(self):
