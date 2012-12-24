@@ -18,6 +18,8 @@ class Card(object):
         self.suit  = suits[suit]
 
     def __eq__(self, other):
+        if not isinstance(other, Card):
+            raise(ValueError('Bad type in comparison: {0}'.format(type(other))))
         if self.suit == other.suit and self.value == other.value:
             return True
         else:

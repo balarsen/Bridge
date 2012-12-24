@@ -53,13 +53,11 @@ class Trick(list):
         return self.getCard('West')
 
     def getCard(self, position):
-        ind = self.index(position)
-        return self[ind]
-
-    def __str__(self):
-        return 'Trick'
-
-    __repr__ = __str__
+        ind = positions.index(position)
+        try:
+            return self[ind]
+        except IndexError:
+            return None
 
     def __repr__(self):
         """do a fancy printout"""
@@ -69,4 +67,9 @@ class Trick(list):
         outStr += '{0}\n'.format(self.east)
         outStr += ('{0:^' + str(ew_len)+ '}\n').format(self.south)
         return outStr
+
+    def __str__(self):
+        return('Trick')
+    #__str__ = __repr__
+
 

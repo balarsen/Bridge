@@ -21,19 +21,6 @@ class Hand(list):
 
     __repr__ = __str__
 
-    def getSuit(self, suit):
-        """
-        return the list of cards that are the requested suit
-        """
-        if suit == 'clubs':
-            return self.clubs
-        if suit == 'spades':
-            return self.spades
-        if suit == 'diamonds':
-            return self.diamonds
-        if suit == 'hearts':
-            return self.hearts
-
     @property
     def clubs(self):
         """

@@ -28,6 +28,14 @@ class TestBidding(unittest.TestCase):
                          self.b.addBid('North', Bid.Bid('pass', 'hearts')))
         self.assertRaises(ValueError, self.b.addBid, 'east', Bid.Bid(5, 'hearts'))
 
+    def test_redeal(self):
+        """if no one buds we need to redeal"""
+        self.b.nextBid(Bid.Bid('pass', 'hearts'))
+        self.b.nextBid(Bid.Bid('pass', 'hearts'))
+        self.b.nextBid(Bid.Bid('pass', 'hearts'))
+        self.assertRaises(Bidding.Redeal, self.b.nextBid, Bid.Bid('pass', 'hearts'))
+        self.assertFalse(self.b.opened)
+
     def test_winningBid(self):
         self.b.addBid('north', Bid.Bid('pass', 'hearts'))
         self.assertTrue(self.b._winningBid() is None)

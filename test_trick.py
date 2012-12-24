@@ -43,6 +43,19 @@ class TestTrick(unittest.TestCase):
         t.nextCard(Card.Card(9,3))
         self.assertEqual(t.winner(), (Card.Card(5,2), 'East'))
 
+    def test_getCard(self):
+        """should be able to get cards played"""
+        t = Trick.Trick(trump='hearts')
+        for p in positions:
+            self.assertTrue(t.getCard(p) is None)
+        t.nextCard(Card.Card(3,3))
+        t.nextCard(Card.Card(4,3))
+        t.nextCard(Card.Card(5,3))
+        t.nextCard(Card.Card(6,3))
+        self.assertEqual(t.north, Card.Card(3,3))
+        self.assertEqual(t.east, Card.Card(4,3))
+        self.assertEqual(t.south, Card.Card(5,3))
+        self.assertEqual(t.west, Card.Card(6,3))
 
 if __name__ == '__main__':
     unittest.main()
