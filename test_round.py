@@ -6,7 +6,6 @@ import numpy as np
 import Round
 import Table
 import Deck
-from __init__ import positions
 
 class TestRound(unittest.TestCase):
     def test_stats(self):

@@ -82,7 +82,6 @@ class Round(object):
 if __name__ == '__main__':
     import Table
     import Deck
-#    import simpleHigh
     d1 = Deck.Deck()
     d1.shuffle(7)
     h1, h2, h3, h4 = d1.deal()

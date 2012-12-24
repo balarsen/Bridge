@@ -1,7 +1,6 @@
 from __future__ import division
 
 import deck
-from Hand import Hand
 import matplotlib.pyplot as plt
 import numpy
 

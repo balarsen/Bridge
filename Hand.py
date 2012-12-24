@@ -1,7 +1,5 @@
 
-from __init__ import suits
 import collections #.Counter as Counter
-import operator
 
 class Hand(list):
     """
@@ -100,9 +98,9 @@ class Hand(list):
         """
         tmp = self.distro.values()
         tmp.sort()
-        bal = [tmp == [2,3,4,4],
-               tmp == [2,3,3,5],
-               tmp == [3,3,3,4]]
+        bal = [tmp == [2, 3, 4, 4],
+               tmp == [2, 3, 3, 5],
+               tmp == [3, 3, 3, 4]]
         if any(bal):
             return True
         else:

@@ -7,7 +7,6 @@ the player will not open with less than 15
 """
 
 import Bidding
-import Bid
 
 class BeginningBidder(Bidding.Bidding_logic):
     def openBid(self):
