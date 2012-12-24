@@ -10,6 +10,9 @@ this module is quite complicated, it will need to both do the mechanics of biddi
 but also allow for puggable "smarts" accordng to different conventions
 """
 
+class Redeal(Exception):
+    pass
+
 class Bidding_logic(object):
     __metaclass__ = ABCMeta
 
@@ -21,11 +24,11 @@ class Bidding_logic(object):
         pass
 
     @abstractmethod
-    def raiseBid(self):
+    def raiseBid(self, bids):
         pass
 
     @abstractmethod
-    def jumpBid(self):
+    def jumpBid(self, bids):
         pass
 
 
@@ -51,7 +54,6 @@ class Bidding(list):
             print self.nextBidder.next(), self.logics[len(self)%4].openBid()
             #self.nextBidder.next()
 
-
     def addBid(self, seat, bid):
         if self._passCount >= 4:  # done
             raise(ValueError('Four passes have already occured'))
@@ -69,6 +71,8 @@ class Bidding(list):
             self._passCount = 0
         self.append( (seat, bid) )
         if self._passCount >= 4:  # done
+            if not self.opened: # no one opened
+                raise(Redeal("No one opened"))
             return self._winningBid()
         else:
             return None
@@ -80,6 +84,26 @@ class Bidding(list):
         for seat, bid in reversed(self):
             if bid.value != 'pass':
                 return (seat, bid)
+
+    def nextBid(self):
+        """
+        subset of above, just goes in order
+        """
+        if not self.opened:
+            return self.addBid(len(self)%4, self.logic[len(self)%4].openBid())
+        else:
+            return self.addBid(len(self)%4, self.logic[len(self)%4].raiseBid(self))
+            
+
+    @property
+    def opened(self):
+        """
+        return True if someonehas opened, False otherwise
+        """
+        for bid in self:
+            if bid[1].value != 'pass':
+                return True
+        return False
 
 
 

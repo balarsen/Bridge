@@ -21,33 +21,46 @@ class Hand(list):
 
     __repr__ = __str__
 
+    def getSuit(self, suit):
+        """
+        return the list of cards that are the requested suit
+        """
+        if suit == 'clubs':
+            return self.clubs
+        if suit == 'spades':
+            return self.spades
+        if suit == 'diamonds':
+            return self.diamonds
+        if suit == 'hearts':
+            return self.hearts
+
     @property
     def clubs(self):
         """
         return all the clubs or ()
         """
-        return tuple([v for v in self if v.suit == 'clubs'])
+        return sorted(tuple([v for v in self if v.suit == 'clubs']), reverse=True)
 
     @property
     def spades(self):
         """
         return all the spades or ()
         """
-        return tuple([v for v in self if v.suit == 'spades'])
+        return sorted(tuple([v for v in self if v.suit == 'spades']), reverse=True)
 
     @property
     def hearts(self):
         """
         return all the hearts or ()
         """
-        return tuple([v for v in self if v.suit == 'hearts'])
+        return sorted(tuple([v for v in self if v.suit == 'hearts']), reverse=True)
 
     @property
     def diamonds(self):
         """
         return all the diamonds or ()
         """
-        return tuple([v for v in self if v.suit == 'diamonds'])
+        return sorted(tuple([v for v in self if v.suit == 'diamonds']), reverse=True)
 
     @property
     def highCard(self):
@@ -60,18 +73,23 @@ class Hand(list):
     def longest(self):
         """
         the longest suit
+        TODO update this so that it returns a list of suits in order
         """
-        return max(self.distro.iteritems(), key=operator.itemgetter(1))[0]
+        cps = collections.Counter()
+        for crd in self:
+            cps += collections.Counter( {crd.suit} )
+        return sorted(cps.items(), reverse=True, key=lambda x:x[1])
 
     @property
     def strongest(self):
         """
         the strongest suit
+        TODO update this so that it returns a list of suits in order
         """
         pps = collections.Counter()
         for crd in self:
             pps += collections.Counter( {crd.suit:crd.hc} )
-        return max(pps)
+        return sorted(pps.items(), reverse=True, key=lambda x:x[1])
         
     @property
     def hc(self):
