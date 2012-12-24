@@ -34,25 +34,13 @@ class Bidding_logic(object):
 
 
 class Bidding(list):
-    def __init__(self, logics, hands, leader='North'):
-        self.leader=leader
+    def __init__(self, leader='north'):
+        self.leader=leader.title()
         _seats = ['North', 'East', 'South', 'West']
         leader_ind = _seats.index(self.leader)
         self._seats = np.roll(['North', 'East', 'South', 'West'], leader_ind).tolist()
         self.nextBidder = itertools.cycle(self._seats)
         self._passCount = 0
-        self.hands = hands
-        self.logics = []
-        for ii, logi in enumerate(logics):
-            self.logics.append(logi(self.hands[ii]))
-
-    def nextBid(self):
-        """
-        add the next bid to the Bidding
-        """
-        if self._winningBid() is None: # open
-            print self.nextBidder.next(), self.logics[len(self)%4].openBid()
-            #self.nextBidder.next()
 
     def addBid(self, seat, bid):
         if self._passCount >= 4:  # done
@@ -85,15 +73,11 @@ class Bidding(list):
             if bid.value != 'pass':
                 return (seat, bid)
 
-    def nextBid(self):
-        """
-        subset of above, just goes in order
-        """
-        if not self.opened:
-            return self.addBid(len(self)%4, self.logic[len(self)%4].openBid())
-        else:
-            return self.addBid(len(self)%4, self.logic[len(self)%4].raiseBid(self))
-            
+    def nextBid(self, bid):
+         """
+         subset of above, just goes in order
+         """
+         return self.addBid(self._seats[len(self)%4], bid)            
 
     @property
     def opened(self):

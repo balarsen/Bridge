@@ -11,20 +11,21 @@ class TestBidding(unittest.TestCase):
 
     def test_init(self):
         b = Bidding.Bidding(leader='south')
-        self.assertEqual(['south', 'west', 'north', 'east', ], b._seats)
+        self.assertEqual(['South', 'West', 'North', 'East', ], b._seats)
         self.assertEqual(0, b._passCount)
-        self.assertEqual(b.leader, 'south')
+        self.assertEqual(b.leader, 'South')
 
     def test_addBid(self):
-        self.b.addBid('north', Bid.Bid(2, 'hearts'))
+        self.b.addBid('North', Bid.Bid(2, 'hearts'))
         self.assertEqual(1, len(self.b))
         self.assertEqual(0, self.b._passCount)
-        self.assertRaises(ValueError, self.b.addBid, 'east', Bid.Bid(1, 'hearts'))
-        self.b.addBid('east', Bid.Bid('pass', 'hearts'))
+        self.assertRaises(ValueError, self.b.addBid, 'East', Bid.Bid(1, 'hearts'))
+        self.b.addBid('East', Bid.Bid('pass', 'hearts'))
         self.assertEqual(1, self.b._passCount)
-        self.b.addBid('south', Bid.Bid('pass', 'hearts'))
-        self.b.addBid('west', Bid.Bid('pass', 'hearts'))
-        self.assertEqual(('north', Bid.Bid(2, 'hearts')), self.b.addBid('north', Bid.Bid('pass', 'hearts')))
+        self.b.addBid('South', Bid.Bid('pass', 'hearts'))
+        self.b.addBid('West', Bid.Bid('pass', 'hearts'))
+        self.assertEqual(('North', Bid.Bid(2, 'hearts')),
+                         self.b.addBid('North', Bid.Bid('pass', 'hearts')))
         self.assertRaises(ValueError, self.b.addBid, 'east', Bid.Bid(5, 'hearts'))
 
     def test_winningBid(self):
@@ -35,9 +36,9 @@ class TestBidding(unittest.TestCase):
 
     def test_nextBid(self):
         self.b.nextBid(Bid.Bid(1, 'hearts'))
-        self.assertEqual(('north', Bid.Bid(1, 'hearts')), self.b._winningBid())
+        self.assertEqual(('North', Bid.Bid(1, 'hearts')), self.b._winningBid())
         self.b.nextBid(Bid.Bid(1, 'spades'))
-        self.assertEqual(('east', Bid.Bid(1, 'spades')), self.b._winningBid())
+        self.assertEqual(('East', Bid.Bid(1, 'spades')), self.b._winningBid())
 
 
 if __name__ == '__main__':
