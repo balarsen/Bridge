@@ -5,9 +5,9 @@ from __init__ import suits
 class Bid(object):
     def __init__(self, value, suit, trump=False):
         if not (value in range(1,8)+['pass']):
-            raise(ValueError("Bid has bad value"))
+            raise(ValueError("Bid has bad value: {0}".format(value)))
         if not (suit in suits):
-            raise(ValueError("Bid has bad suit"))
+            raise(ValueError("Bid has bad suit: {0}".format(suit)))
         self.value = value
         self.suit  = suits[suit]
 
