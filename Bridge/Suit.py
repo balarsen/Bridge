@@ -8,10 +8,10 @@ class Suit(object):
         self.suit = suit
 
     def __eq__(self, other):
-        if self.suit == other.suit:
-            return True
-        else:
-            return False
+        if isinstance(other, Suit):
+            return self.suit == other.suit
+        else:  # assume it is a string
+            return self.suit == other
 
     def __ne__(self, other):
         return ~(self == other)

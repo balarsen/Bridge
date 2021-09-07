@@ -12,13 +12,14 @@ def test_eq():
     a = Suit('spades')
     b = Suit('spades')
     assert a == b
+    assert a == 'spades'
 
 
 def test_ne():
     a = Suit('spades')
     b = Suit('hearts')
     assert a != b
-
+    assert a != 'clubs'
 
 def test_str():
     assert str(Suit('spades')) == 'spades'
