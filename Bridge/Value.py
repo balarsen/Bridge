@@ -4,7 +4,7 @@ class Value(object):
 
     def __init__(self, value):
         if value not in Value.values_set:
-            raise (ValueError(f'Bad value {Value.values}'))
+            raise (ValueError(f'Bad value, {value}, {Value.values}'))
         self.value = value
 
     def __eq__(self, other):
