@@ -19,42 +19,37 @@ class Hand(list):
 
     __repr__ = __str__
 
-    @property
     def clubs(self):
         """
         return all the clubs or ()
         """
         return sorted(tuple([v for v in self if v.suit == 'clubs']), reverse=True)
 
-    @property
+
     def spades(self):
         """
         return all the spades or ()
         """
         return sorted(tuple([v for v in self if v.suit == 'spades']), reverse=True)
 
-    @property
     def hearts(self):
         """
         return all the hearts or ()
         """
         return sorted(tuple([v for v in self if v.suit == 'hearts']), reverse=True)
 
-    @property
     def diamonds(self):
         """
         return all the diamonds or ()
         """
         return sorted(tuple([v for v in self if v.suit == 'diamonds']), reverse=True)
 
-    @property
     def highCard(self):
         """
         return the highest card in a hand
         """
         return max(self)
 
-    @property
     def longest(self):
         """
         the longest suit
@@ -65,7 +60,6 @@ class Hand(list):
             cps += collections.Counter( {crd.suit} )
         return sorted(cps.items(), reverse=True, key=lambda x:x[1])
 
-    @property
     def strongest(self):
         """
         the strongest suit
@@ -76,12 +70,10 @@ class Hand(list):
             pps += collections.Counter( {crd.suit:crd.hc} )
         return sorted(pps.items(), reverse=True, key=lambda x:x[1])
         
-    @property
-    def hc(self):
+    def hcp(self):
         tmp = sum([val.hc for val in self])
         return tmp
 
-    @property
     def distro(self):
         suits = [val.suit for val in self]
         distro = {'spades':suits.count('spades'),
@@ -90,7 +82,6 @@ class Hand(list):
                   'clubs':suits.count('clubs')}
         return distro        
 
-    @property
     def balanced(self):
         """
         count the number of each suit looking for balanced hands
