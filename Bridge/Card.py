@@ -1,67 +1,49 @@
-
-from . import suits, values
+from .Suit import Suit
+from .Value import Value
 
 
 class Card(object):
-    __version__ = '0.0.1'
-    __author__ = 'Brian Larsen'
+    """
+    A class to represent a Card
+    """
 
     def __init__(self, value, suit, trump=False):
-        if suit == 'notrump':
-            raise(ValueError("Card has bad suit"))
-        if not (value in values):
-            raise(ValueError("Card has bad value"))
-        if not (suit in suits):
-            raise(ValueError("Card has bad suit"))
         self.trump = trump
-        self.value = values[value]
-        self.suit  = suits[suit]
+        self.value = Value(value)
+        self.suit = Suit(suit)
 
     def __eq__(self, other):
-        if not isinstance(other, Card):
-            raise(ValueError('Bad type in comparison: {0}'.format(type(other))))
-        if self.suit == other.suit and self.value == other.value:
-            return True
-        else:
-            return False
+        return self.suit == other.suit and self.value == other.value
 
     def __ne__(self, other):
-        if self == other:
-            return False
-        else:
-            return True
+        return ~(self == other)
 
     def __lt__(self, other):
-        if self.trump == other.trump:
-            if values[self.value] < values[other.value]:
-                return True
-            else:
-                return False
-        elif self.trump:
+        if self.trump and other.trump:  # both are trump
+            return self.value < other.value
+        elif self.trump:  # self is trump
             return False
-        else:
+        elif other.trump:  # other is trump
             return True
+        elif self.suit == other.suit:  # same suits
+            return self.value < other.value
+        else:  # different suit, can't compare
+            return False
 
     def __gt__(self, other):
-        if self.trump == other.trump:
-            if values[self.value] > values[other.value]:
-                return True
-            else:
-                return False
-        elif self.trump:
+        if self.trump and other.trump:  # both are trump
+            return self.value > other.value
+        elif self.trump:  # self is trump
             return True
-        else:
+        elif other.trump:  # other is trump
+            return False
+        elif self.suit == other.suit:  # same suits
+            return self.value > other.value
+        else:  # different suit, can't compare
             return False
 
-    @property
-    def hc(self):
-        tmp = values[self.value] - 10
-        if tmp > 0:
-            return tmp
-        else:
-            return 0
-
     def __str__(self):
-        return "%s of %s" % (self.value, self.suit)
+        return f"{self.value} of {self.suit}"
 
-    __repr__ = __str__
+    def __repr__(self):
+        return f"<{self.value} of {self.suit}>"

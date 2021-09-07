@@ -24,6 +24,8 @@ def test_gt():
     a = Value(2)
     b = Value(3)
     assert b > a
+    b = Value('Q')
+    assert b > a
 
 
 def test_lt():
