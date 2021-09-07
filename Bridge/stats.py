@@ -1,8 +1,9 @@
 from __future__ import division
 
-import deck
 import matplotlib.pyplot as plt
 import numpy
+
+from . import deck
 
 # create a deck
 d = deck.deck()

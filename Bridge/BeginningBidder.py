@@ -6,8 +6,8 @@ the player will not open with less than 15
  - the player opens in the strongest suit
 """
 
-import Bid
-import Bidding
+from . import Bid
+from . import Bidding
 
 class BeginningBidder(Bidding.Bidding_logic):
     def openBid(self):

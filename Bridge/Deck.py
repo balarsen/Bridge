@@ -1,7 +1,7 @@
 import random
 
-from Card import Card
-from Hand import Hand
+from .Card import Card
+from .Hand import Hand
 
 class Deck(list):
     def __init__(self):

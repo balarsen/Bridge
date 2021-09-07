@@ -1,6 +1,6 @@
 
-from Table import index2pos
-from __init__ import positions
+from .Table import index2pos
+from . import positions
 
 
 class Trick(list):

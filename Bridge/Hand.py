@@ -13,7 +13,7 @@ class Hand(list):
         self.n_cards = len(self)
 
     def __str__(self):
-        self.sort()
+        # self.sort()
         lst = [val for val in self]
         return str(lst)
 
@@ -97,7 +97,7 @@ class Hand(list):
         balanced hands are 4,3,3,3  5,3,3,2  4,4,3,2
         """
         tmp = self.distro.values()
-        tmp.sort()
+        # tmp.sort()
         bal = [tmp == [2, 3, 4, 4],
                tmp == [2, 3, 3, 5],
                tmp == [3, 3, 3, 4]]

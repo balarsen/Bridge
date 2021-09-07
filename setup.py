@@ -20,7 +20,7 @@ setuptools.setup(
         "License :: OSI Approved :: BSD-3-Clause",
         "Operating System :: OS Independent",
     ],
-    package_dir={"": "Bridge"},
-    packages=setuptools.find_packages(where="Bridge"),
+    # package_dir={"": "Bridge"},
+    # packages=setuptools.find_packages(where="Bridge"),
     python_requires=">=3.6",
 )

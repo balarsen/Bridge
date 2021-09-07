@@ -1,5 +1,5 @@
 
-from __init__ import positions
+from . import positions
 
 
 class position(object):

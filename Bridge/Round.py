@@ -11,7 +11,7 @@ It needs to have pluggable playstyle for each player seperately
 from abc import ABCMeta, abstractmethod
 import itertools
 
-import Trick
+from . import Trick
 
 class HandLogic(object):
     """
@@ -95,12 +95,12 @@ if __name__ == '__main__':
     for i in range(12):
         win = rnd.play_trick(win[1])
         tricks.append(win[1])
-    print ''
-    print 'N-S', sum([1 for v in tricks if v in ['North', 'South']]),
-    print 'E-W', sum([1 for v in tricks if v in ['East', 'West']])
+    print('')
+    print('N-S', sum([1 for v in tricks if v in ['North', 'South']]),)
+    print('E-W', sum([1 for v in tricks if v in ['East', 'West']]))
 
     # collect some stats
-    print 'collecting stats'
+    print('collecting stats')
     stats = []
     seats = ['North', 'East', 'South', 'West']
     st = itertools.cycle(seats)

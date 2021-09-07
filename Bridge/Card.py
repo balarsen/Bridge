@@ -1,5 +1,5 @@
 
-from __init__ import suits, values
+from . import suits, values
 
 
 class Card(object):
