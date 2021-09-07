@@ -21,5 +21,12 @@ To Do
 
 
 
+## Testing
+
+`pytest`
+
+#### Testing with coverage
+`pytest --cov-report html --cov=Bridge` then look at `htmlcov/index.html`
+
 
 
