@@ -1,105 +1,68 @@
+import functools
 
-import collections #.Counter as Counter
+from .Suit import Suit
+
 
 class Hand(list):
     """
     needs to build from a deck, get cards, know how many there are and collect points
     """
+
     def __init__(self, c):
         if len(c) != 13:
-            raise(ValueError('wrong number of cards in a hard'))
+            raise (ValueError('wrong number of cards in a hard'))
         super(Hand, self).__init__(c)
-        # careful here only one hard per call
-        self.n_cards = len(self)
 
     def __str__(self):
         # self.sort()
-        lst = [val for val in self]
-        return str(lst)
+        lst = " ".join([str(val) for val in self])
+        return lst
 
-    __repr__ = __str__
+    def __repr__(self):
+        return f"<hand object: {len(self)} cards>"
 
-    def clubs(self):
-        """
-        return all the clubs or ()
-        """
-        return sorted(tuple([v for v in self if v.suit == 'clubs']), reverse=True)
+    def get_suit(self, suit):
+        return sorted([v for v in self if v.suit == suit], reverse=True)
 
+    clubs = functools.partialmethod(get_suit, suit='clubs')
+    hearts = functools.partialmethod(get_suit, suit='hearts')
+    diamonds = functools.partialmethod(get_suit, suit='diamonds')
+    spades = functools.partialmethod(get_suit, suit='spades')
 
-    def spades(self):
+    def highCard(self, suit):
         """
-        return all the spades or ()
+        return the highest card in a suit
         """
-        return sorted(tuple([v for v in self if v.suit == 'spades']), reverse=True)
+        return max(self.get_suit(suit))
 
-    def hearts(self):
+    def lowCard(self, suit):
         """
-        return all the hearts or ()
+        return the lowest card in a suit
         """
-        return sorted(tuple([v for v in self if v.suit == 'hearts']), reverse=True)
-
-    def diamonds(self):
-        """
-        return all the diamonds or ()
-        """
-        return sorted(tuple([v for v in self if v.suit == 'diamonds']), reverse=True)
-
-    def highCard(self):
-        """
-        return the highest card in a hand
-        """
-        return max(self)
-
-    def longest(self):
-        """
-        the longest suit
-        TODO update this so that it returns a list of suits in order
-        """
-        cps = collections.Counter()
-        for crd in self:
-            cps += collections.Counter( {crd.suit} )
-        return sorted(cps.items(), reverse=True, key=lambda x:x[1])
-
-    def strongest(self):
-        """
-        the strongest suit
-        TODO update this so that it returns a list of suits in order
-        """
-        pps = collections.Counter()
-        for crd in self:
-            pps += collections.Counter( {crd.suit:crd.hc} )
-        return sorted(pps.items(), reverse=True, key=lambda x:x[1])
-        
-    def hcp(self):
-        tmp = sum([val.hc for val in self])
-        return tmp
+        return min(self.get_suit(suit))
 
     def distro(self):
-        suits = [val.suit for val in self]
-        distro = {'spades':suits.count('spades'),
-                  'hearts':suits.count('hearts'),
-                  'diamonds':suits.count('diamonds'),
-                  'clubs':suits.count('clubs')}
-        return distro        
-
-    def balanced(self):
         """
-        count the number of each suit looking for balanced hands
-        balanced hands are 4,3,3,3  5,3,3,2  4,4,3,2
+        the distro of each suit
         """
-        tmp = self.distro.values()
-        # tmp.sort()
-        bal = [tmp == [2, 3, 4, 4],
-               tmp == [2, 3, 3, 5],
-               tmp == [3, 3, 3, 4]]
-        if any(bal):
-            return True
-        else:
-            return False
+        ans = []
+        for s in Suit.suits:
+            ans.append((s, len(self.get_suit(s))))
+        return tuple(ans)
 
-
-
-
-
-
-
+    # def balanced(self):
+    #     """
+    #     count the number of each suit looking for balanced hands
+    #     balanced hands are 4,3,3,3  5,3,3,2  4,4,3,2
+    #
+    #     #TODO, likely this goes in a scoring class
+    #     """
+    #     dist = set([v[1] for v in self.distro()])
+    #     if dist == set([2, 3, 4, 4]):
+    #         return True
+    #     elif dist == set([2, 3, 3, 5]):
+    #         return True
+    #     elif dist == set([3, 3, 3, 4]):
+    #         return True
+    #     else:
+    #         return False

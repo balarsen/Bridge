@@ -1,62 +1,63 @@
+import pytest
 
-import unittest
+import numpy as np
 
-from .. import Card
-from .. import Deck
-from .. import Hand
+from ..Card import Card
+from ..Hand import Hand
 
-class TestHand(unittest.TestCase):
-    def setUp(self):
-        super(TestHand, self).setUp()
-        d1 = Deck.Deck()
-        self.h1, self.h2, self.h3, self.h4 = d1.deal()
-        vals = ((4,1), (4,2), (4,3), (4,4),
-                (5,1), (5,2), (5,3), (5,4),
-                (6,1), (6,2), (6,3), (6,4),
-                (7,1))
-        self.cards = [Card.Card(*v) for v in vals]
-        self.hnd = Hand.Hand(self.cards)
 
-    def test_longest(self):
-        """longest should do as expected"""
-        self.assertEqual(self.h1.longest, [('spades', 13)])
-        self.assertEqual(self.h2.longest, [('hearts', 13)])
-        self.assertEqual(self.h3.longest, [('diamonds', 13)])
-        self.assertEqual(self.h4.longest, [('clubs', 13)])
-
-    def test_strongest(self):
-        """sringest has known output"""
-        self.assertEqual(self.h1.strongest, [('spades', 10)])
-        self.assertEqual(self.h2.strongest, [('hearts', 10)])
-        self.assertEqual(self.h3.strongest, [('diamonds', 10)])
-        self.assertEqual(self.h4.strongest, [('clubs', 10)])
+class TestHand:
+    cards = (Card('K', 'spades'),
+             Card(5, 'spades'),
+             Card(2, 'spades'),
+             Card('A', 'hearts'),
+             Card(6, 'hearts'),
+             Card('Q', 'diamonds'),
+             Card(9, 'diamonds'),
+             Card(6, 'diamonds'),
+             Card(5, 'diamonds'),
+             Card(4, 'diamonds'),
+             Card(3, 'diamonds'),
+             Card(4, 'clubs'),
+             Card(2, 'clubs'),
+             )
 
     def test_init(self):
-        """test input checking"""
-        self.assertTrue(hasattr(self.h1, "n_cards"))
-        self.assertTrue(hasattr(self.h1, "distro"))
-        self.assertTrue(hasattr(self.h1, "balanced"))
-        self.assertRaises(ValueError, Hand.Hand, self.cards[1:])
+        with pytest.raises(ValueError):
+            h = Hand(TestHand.cards[:-2])
+        h = Hand(TestHand.cards)
+        assert len(h) == 13
 
     def test_str(self):
-        self.assertTrue(isinstance(self.h1.__str__(), str))
+        h = Hand(TestHand.cards)
+        s = str(h)
+        assert s.startswith('K of spades')
 
-    def test_get_hc(self):
-        self.assertEqual(self.h1.hc, 10)
-        self.assertEqual(self.h2.hc, 10)
-        self.assertEqual(self.h3.hc, 10)
-        self.assertEqual(self.h4.hc, 10)
-        self.assertEqual(self.hnd.hc, 0)
+    def test_get_suit(self):
+        h = Hand(TestHand.cards)
+        ans = (Card('K', 'spades'),
+             Card(5, 'spades'),
+             Card(2, 'spades'))
+        np.testing.assert_array_equal(ans, h.get_suit('spades'))
 
-    def test_is_balanced(self):
-        self.assertFalse(self.h1.balanced)
-        self.assertFalse(self.h2.balanced)
-        self.assertFalse(self.h3.balanced)
-        self.assertFalse(self.h4.balanced)
-        self.assertTrue(self.hnd.balanced)
+    def test_get_suit_empty(self):
+        h = Hand(TestHand.cards)
+        del h[0]
+        del h[0]
+        del h[0]
+        assert h.get_suit('spades') == []
 
-    # TODO add test_pps!!
+    def test_highCard(self):
+        h = Hand(TestHand.cards)
+        assert h.highCard('spades') == Card('K', 'spades')
 
+    def test_lowCard(self):
+        h = Hand(TestHand.cards)
+        assert h.lowCard('spades') == Card(2, 'spades')
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_distro(self):
+        h = Hand(TestHand.cards)
+        assert h.distro() == (('spades', 3),
+                              ('hearts', 2),
+                              ('diamonds', 6),
+                              ('clubs', 2))
