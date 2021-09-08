@@ -9,28 +9,28 @@ def test_ValueError():
 
 
 def test_eq():
-    a = Value(2)
-    b = Value(2)
+    a = Value('2')
+    b = Value('2')
     assert a == b
 
 
 def test_ne():
-    a = Value(2)
-    b = Value(3)
+    a = Value('2')
+    b = Value('3')
     assert a != b
 
 
 def test_gt():
-    a = Value(2)
-    b = Value(3)
+    a = Value('2')
+    b = Value('3')
     assert b > a
     b = Value('Q')
     assert b > a
 
 
 def test_lt():
-    a = Value(2)
-    b = Value(3)
+    a = Value('2')
+    b = Value('3')
     assert a < b
 
 
