@@ -8,9 +8,13 @@ from .Value import Value
 
 
 class Deck(list):
-    def __init__(self):
-        for s, v in itertools.product(Suit.suits, Value.values):
-            self.append(Card(v, s))
+    def __init__(self, indeck=None):
+        if indeck is None:
+            for s, v in itertools.product(Suit.suits, Value.values):
+                self.append(Card(v, s))
+        else:
+            for c in indeck:
+                self.append(c)
 
     def shuffle(self, num=1):
         for i in range(num):
@@ -36,3 +40,14 @@ class Deck(list):
 
     def __ne__(self, other):
         return tuple(self) != tuple(other)
+
+    def toCode(self):
+        return ''.join(c.toCode() for c in self)
+
+    @staticmethod
+    def fromCode(inval):
+        """
+        take a strong encoded with stringRep and make a deck
+        """
+        cards = [Card(v, Suit.letterToSuit(s)) for v, s in zip(inval[::2], inval[1::2])]
+        return Deck(cards)
