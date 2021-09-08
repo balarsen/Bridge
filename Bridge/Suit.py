@@ -21,3 +21,15 @@ class Suit(object):
 
     def __repr__(self):
         return f"<{self.suit}>"
+
+    @staticmethod
+    def letterToSuit(letter):
+        mapping = {'s':'spades',
+                   'h':'hearts',
+                   'd':'diamonds',
+                   'c':'clubs'}
+        ans = [mapping[v] for v in letter]
+        if len(letter) == 1:
+            return ans[0]
+        else:
+            return ans

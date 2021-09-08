@@ -21,9 +21,20 @@ def test_ne():
     assert a != b
     assert a != 'clubs'
 
+
 def test_str():
     assert str(Suit('spades')) == 'spades'
 
 
 def test_repr():
     assert repr(Suit('spades')) == '<spades>'
+
+
+def test_letterToSuit():
+    ans = ['diamonds', 'clubs', 'hearts', 'hearts']
+    tst = Suit.letterToSuit('dchh')
+    assert tst == ans
+
+
+def test_letterToSuit_1letter():
+    assert Suit.letterToSuit('d') == 'diamonds'
