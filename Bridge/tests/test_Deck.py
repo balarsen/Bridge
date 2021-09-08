@@ -42,15 +42,15 @@ def test_deal():
     assert len(h1) == len(h2) == len(h3) == len(h4)
     assert h1 == Hand(d1[::4])
 
+
 def test_toCode():
     d1 = Deck()
     ans = '2s3s4s5s6s7s8s9s0sJsQsKsAs2h3h4h5h6h7h8h9h0hJhQhKhAh2d3d4d5d6d7d8d9d0dJdQdKdAd2c3c4c5c6c7c8c9c0cJcQcKcAc'
     assert d1.toCode() == ans
+
 
 def test_fromCode():
     d1 = Deck()
     ans = '2s3s4s5s6s7s8s9s0sJsQsKsAs2h3h4h5h6h7h8h9h0hJhQhKhAh2d3d4d5d6d7d8d9d0dJdQdKdAd2c3c4c5c6c7c8c9c0cJcQcKcAc'
     d2 = Deck.fromCode(ans)
     assert d1 == d2
-
-
