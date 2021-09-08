@@ -1,5 +1,5 @@
 import itertools
-import random
+import numpy as np
 
 from .Card import Card
 from .Hand import Hand
@@ -20,11 +20,11 @@ class Deck(list):
 
     def shuffle(self, num=1):
         for i in range(num):
-            random.shuffle(self)
+            np.random.shuffle(self)
 
     def cut(self, place=None):
         if place == None:
-            place = random.randint(1, 53)
+            place = np.random.randint(1, 53)
         dtmp = self[place:]
         dtmp.extend(self[:place])
         self[:] = dtmp
