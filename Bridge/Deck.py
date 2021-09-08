@@ -8,13 +8,15 @@ from .Value import Value
 
 
 class Deck(list):
-    def __init__(self, indeck=None):
+    def __init__(self, indeck=None, shuffle=None):
         if indeck is None:
             for s, v in itertools.product(Suit.suits, Value.values):
                 self.append(Card(v, s))
         else:
             for c in indeck:
                 self.append(c)
+        if shuffle is not None:
+            self.shuffle(shuffle)
 
     def shuffle(self, num=1):
         for i in range(num):
