@@ -9,8 +9,14 @@ class Card(object):
 
     def __init__(self, value, suit, trump=False):
         self.trump = trump
-        self.value = Value(value)
-        self.suit = Suit(suit)
+        if isinstance(value, Value):
+            self.value = value
+        else:
+            self.value = Value(value)
+        if isinstance(suit, Suit):
+            self.suit = suit
+        else:
+            self.suit = Suit(suit)
 
     def __eq__(self, other):
         return self.suit == other.suit and self.value == other.value
@@ -47,3 +53,16 @@ class Card(object):
 
     def __repr__(self):
         return f"<{self.value} of {self.suit}>"
+
+    def toCode(self):
+        """
+        encode a card into a 2 letter code <value|suit>
+        """
+        return str(self.value) + str(self.suit)[0]
+
+    @staticmethod
+    def fromCode(code):
+        """
+        return a card from the 2 letter code <value|suit>
+        """
+        return Card(code[0], Suit.letterToSuit(code[1]))
