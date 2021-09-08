@@ -1,15 +1,16 @@
+import itertools
 import random
 
 from .Card import Card
 from .Hand import Hand
+from .Suit import Suit
+from .Value import Value
+
 
 class Deck(list):
     def __init__(self):
-        cards = []
-        for i in range(2, 15):
-            for j in range(1, 5):
-                cards.append(Card(i, j))
-        self.extend(cards)
+        for s, v in itertools.product(Suit.suits, Value.values):
+            self.append(Card(v, s))
 
     def shuffle(self, num=1):
         for i in range(num):
@@ -31,14 +32,7 @@ class Deck(list):
 
     def __eq__(self, other):
         """equal if cards in same order"""
-        for i in range(52):
-            if self[i] != other[i]:
-                return False
-        return True
+        return tuple(self) == tuple(other)
 
     def __ne__(self, other):
-        if self == other:
-            return False
-        else:
-            return True
-
+        return tuple(self) != tuple(other)
