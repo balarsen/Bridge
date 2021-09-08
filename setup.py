@@ -22,5 +22,6 @@ setuptools.setup(
     ],
     # package_dir={"": "Bridge"},
     # packages=setuptools.find_packages(where="Bridge"),
+    packages=setuptools.find_packages(),
     python_requires=">=3.6",
 )
