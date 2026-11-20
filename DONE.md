@@ -4,7 +4,7 @@ Completed work, newest first. The live map and open items are in [PROJECT_MAP.md
 
 ## 2026-11-20 — the object classes made cheaper, API unchanged
 
-230 tests (35 new), 100% statement and branch coverage. **All 195 tests that existed before pass unchanged**, including the 800-case equivalence of `FastRound` with `Round` and the checks of `Simulation` against `Deck`/`Hand`.
+230 tests (35 new), 100% statement and branch coverage, CI green on Python 3.12, 3.13 and 3.14 (commit `0e6664b`). **All 195 tests that existed before pass unchanged**, including the 800-case equivalence of `FastRound` with `Round` and the checks of `Simulation` against `Deck`/`Hand`.
 
 **Measured (one thread, `Deck(shuffle=3)` + `Round.play`): 454 us per round before, 183 us after, 2.5x** (5,460 rounds/s against 2,200); playing the 13 tricks went from 386 us to 143 us. Through the harness on 6 workers the object path does 15,300 rounds/s (it was 9,700), identical results at every worker count. Micro-costs: `Deck()` 25.5 -> 0.4 us, `Hand.get_suit` 6.3 -> 0.3, `Hand.distro` 20.9 -> 1.0, `Hand.balanced` 22 -> 0.9, `Position.pos2index` 0.8 -> 0.2.
 
