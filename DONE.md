@@ -2,6 +2,16 @@
 
 Completed work, newest first. The live map and open items are in [PROJECT_MAP.md](PROJECT_MAP.md).
 
+## 2026-11-20 — map cleaned: finished plans and settled decisions moved here
+
+From now on every finished item moves from PROJECT_MAP.md to this file (see the rule at the top of the map). What moved in this first pass:
+
+- **The multiprocessing harness plan** (built as `Bridge/Harness.py`, entry below). Design notes that were in the plan: `task(rng, count, **config)` is a top-level function (picklable by reference) returning a small result (arrays or counts, never `Deck`/`Hand` objects); the default reducer concatenates; a pool is created per call with the `spawn` context and `workers=1` is the in-process path; each worker sets `NUMBA_NUM_THREADS=1`; tasks and strategy classes must be importable at module level (no lambdas or local classes); `joblib`'s loky backend (installed through PyMC) handles closures and stays a notebook tool while the library uses the standard library. The planned steps (in-process batching, the pool path with a real multi-process test, a scaling benchmark, a million-round first customer) were all done.
+- **"Integer-array play engine" decision**: done in the pure-Python form as `Bridge/FastRound.py`; the compiled and search-oriented engine (bitboards, DDS) is part of PLAN_PLAYING.md.
+- **Decision: `Card` stays as it is** (same-suit comparison only, not a total order): the easiest thing, and trump lives in `Trick.beats`. If a sorted display of a hand is wanted, add a sort-key helper (suit order, then value) rather than changing `Card` comparison.
+- **Decision: we go hand by hand for now** (deal, bid, play one hand); whole games and full scoring wait.
+- Seed plumbing for parallel runs (one `SeedSequence` child per batch) is in the harness; what remains of the RNG TODO is in the map.
+
 ## 2026-11-20 — integer round engine and the multiprocessing harness
 
 195 tests, 100% statement and branch coverage.
