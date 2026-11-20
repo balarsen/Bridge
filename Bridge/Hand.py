@@ -25,7 +25,10 @@ class Hand(list):
     """
     needs to build from a deck, get cards, know how many there are and collect points
 
-    It is a list of cards in the order they were dealt.  Behind that it keeps the cards by suit, each suit
+    It is a list of the cards still in the hand, in the order they were dealt.  `original` is the 13 cards
+    as dealt and `played` the cards played from it so far, in order (the n-th card played in trick n);
+    `play(card)` takes a card out of the hand and records it, while `remove` only takes it out.  Behind that
+    it keeps the cards by suit, each suit
     sorted highest first, built the first time it is needed and kept up to date when a card is removed, so
     `get_suit`, `distro`, `longest`, ... are lookups instead of a filter and a sort over the 13 cards.  Any
     other change to the list (append, del, slice assignment, ...) just throws that cache away.
@@ -36,6 +39,8 @@ class Hand(list):
         if len(c) != 13:
             raise (ValueError('wrong number of cards in a hand'))
         super(Hand, self).__init__(c)
+        self.original = tuple(c)
+        self.played = []
 
     def _suits(self):
         """the cards of each suit, highest first, indexed like Suit.suits"""
@@ -67,6 +72,11 @@ class Hand(list):
                 if c.code == code:
                     del cards[i]
                     break
+
+    def play(self, card):
+        """play a card: take it out of the hand and remember that it was played"""
+        self.remove(card)
+        self.played.append(card)
 
     def __str__(self):
         # self.sort()
