@@ -17,7 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
-      - name: Install (package and test dependencies only, not the notebook stack)
-        run: uv sync --no-default-groups --group dev
+      - name: Install (package, test and double-dummy dependencies, not the notebook stack)
+        # the dd group (endplay) has wheels for Python 3.12 and 3.13 only; on 3.14 it is skipped by its marker
+        # and the double-dummy tests skip themselves
+        run: uv sync --no-default-groups --group dev --group dd
       - name: Test with coverage
         run: uv run --no-sync pytest --cov=Bridge --cov-report=term-missing
