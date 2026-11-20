@@ -1,4 +1,10 @@
+[run]
+source = Bridge
+branch = True
+omit = */tests/*
+
 [report]
+show_missing = True
 exclude_lines =
     pragma: no cover
     def __repr__

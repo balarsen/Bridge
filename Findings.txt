@@ -6,4 +6,22 @@
 2) With a fixed trump and stationary deal "simpleHigh" logic leads to an average
     if 7 tricks for the dealer and 6 tricks for the other side.
 
+----------------------------------------------------------------------------
+20-Nov-2026  Re-run after porting to Python 3  (see DONE.md)
+
+Result 1 holds, result 2 does NOT and should not be relied on.  The 2012 code
+let a card of any suit beat the card led (Card.__gt__ ignored suit unless
+trump was involved) and Round.play_trick always had seat 0 lead whatever the
+leader was, so it was not playing bridge.
+
+With real trick rules (follow suit, only the lead suit or a trump can win),
+fixed trump spades, "simpleHigh", 20000 deals per experiment, standard error
+about 0.014 tricks:
+1) rotating leader:      N-S 6.50, E-W 6.50 tricks  (matches 2012 result 1)
+2) north always leads:   N-S 6.31, E-W 6.69 tricks  (the leading side wins
+    slightly LESS: simpleHigh leads its highest card, often an ace that gets
+    ruffed)
+These are locked in, with looser bounds, by test_stats and
+test_fixed_leader_is_not_an_advantage in Bridge/tests/test_round.py.
+
 

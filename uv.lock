@@ -3,10 +3,10 @@ revision = 5
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
-    "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version >= '3.15' and sys_platform == 'emscripten'",
-    "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "python_full_version >= '3.15' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'win32'",
+    "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
     "python_full_version == '3.14.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
     "python_full_version < '3.14' and sys_platform == 'win32'",
     "python_full_version < '3.14' and sys_platform == 'emscripten'",
@@ -185,6 +185,7 @@ dev = [
 ]
 notebooks = [
     { name = "matplotlib" },
+    { name = "nbstripout" },
     { name = "notebook" },
     { name = "pandas" },
     { name = "scipy" },
@@ -201,6 +202,7 @@ dev = [
 ]
 notebooks = [
     { name = "matplotlib", specifier = ">=3.9" },
+    { name = "nbstripout", specifier = ">=0.8" },
     { name = "notebook", specifier = ">=7" },
     { name = "pandas", specifier = ">=2" },
     { name = "scipy", specifier = ">=1.13" },
@@ -1513,6 +1515,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/31/72/b3446efab8756e7df4b8ec587f8e611cb5a7249e4323db480802f1d3be04/nbformat-5.11.1.tar.gz", hash = "sha256:32d4521c68c6e7d5b29c76defaeed9f42ea733142b9b19f88277ce10390b9c4d", size = 147775, upload-time = "2026-08-17T08:10:51.942Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1a/69/ee613f74085ca7103f79cd08d579c4f3177d1d26e5d3d9528d2d6536a707/nbformat-5.11.1-py3-none-any.whl", hash = "sha256:cc6698fa75f4fab8755ead786317815f13a6fee3b53311c0abb1a8b51d52f7ec", size = 79849, upload-time = "2026-08-17T08:10:50.18Z" },
+]
+
+[[package]]
+name = "nbstripout"
+version = "0.9.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nbformat" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/38/4d/79077e0ae4c6a4d5a854f984d243bdcf22a220a5d47fee399160cda5f022/nbstripout-0.9.2.tar.gz", hash = "sha256:77ca8ddefd1f41d8d9560d79576b1e1a34b203cefd89a98574c6f0725edf160f", size = 32842, upload-time = "2026-11-17T21:45:31.181Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d8/91/221772f8073f70633f10ee42d9aa85b33e2d6e83cd066835a0a7bedfc407/nbstripout-0.9.2-py3-none-any.whl", hash = "sha256:55b5b708845d0bd61060e6281593e637496aca4bc459e05a99eb3d934cfba1be", size = 19140, upload-time = "2026-11-17T21:45:29.888Z" },
 ]
 
 [[package]]

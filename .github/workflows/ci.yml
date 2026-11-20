@@ -1,0 +1,23 @@
+name: tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}  # overrides the .python-version pin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install (package and test dependencies only, not the notebook stack)
+        run: uv sync --no-default-groups --group dev
+      - name: Test with coverage
+        run: uv run --no-sync pytest --cov=Bridge --cov-report=term-missing

@@ -30,6 +30,7 @@ notebooks = [
     "scipy>=1.13",
     "seaborn>=0.13",
     "matplotlib>=3.9",
+    "nbstripout>=0.8",
 ]
 
 [build-system]

@@ -14,6 +14,13 @@ uv run pytest
 
 Notebooks: `uv run jupyter notebook Notebooks/`
 
+Optional, once per clone: keep Jupyter's kernel-version metadata out of git diffs while keeping
+the saved outputs (this edits `.git/config` and `.gitattributes`):
+
+```
+uv run nbstripout --install --keep-output --extra-keys "metadata.language_info.version"
+```
+
 ## Roadmap
 
 ### In Progress/Done
