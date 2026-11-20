@@ -141,3 +141,76 @@ def test_vulnerability_changes_scores_not_tricks():
     vul = E.evaluate(np.random.default_rng(6), 40, vulnerable=True)
     assert np.array_equal(plain[:, E.COL['tricks_simple']], vul[:, E.COL['tricks_simple']])
     assert not np.array_equal(plain[:, E.COL['score_simple']], vul[:, E.COL['score_simple']])
+
+
+# ---------------------------------------------------------------------------------------------- one fixed hand
+SOUTH = 'AsKs0s9s7s4s2sAh4h9dAc9c3c'  # 15 points, 7-2-1-3
+
+
+def south_cards():
+    from ..Card import Card
+    return [Card.fromCode(SOUTH[i:i + 2]) for i in range(0, len(SOUTH), 2)]
+
+
+def test_layouts_keep_the_hand_and_deal_the_rest():
+    deals = E.layouts(np.random.default_rng(1), 20, 2, south_cards())
+    assert len(deals) == 20
+    seen = set()
+    for hands in deals:
+        assert set(hands[2].original) == set(south_cards())
+        everything = [c for h in hands for c in h.original]
+        assert len(everything) == 52 and len(set(everything)) == 52 and all(len(h) == 13 for h in hands)
+        seen.add(tuple(sorted(c.toCode() for c in hands[0].original)))
+    assert len(seen) > 15  # a different placement each time
+    other_seat = E.layouts(np.random.default_rng(1), 1, 0, south_cards())[0]
+    assert set(other_seat[0].original) == set(south_cards())
+    with pytest.raises(ValueError):
+        E.layouts(np.random.default_rng(1), 1, 2, south_cards()[:12])
+    with pytest.raises(ValueError):
+        E.layouts(np.random.default_rng(1), 1, 2, south_cards()[:12] + south_cards()[:1])
+
+
+def test_evaluate_fixed_without_the_solver():
+    rows = E.evaluate_fixed(np.random.default_rng(3), 60, 2, SOUTH)
+    assert rows.shape == (60, len(E.COLUMNS))
+    assert (rows[:, E.COL['met_level']] == -1).all() and (rows[:, E.COL['dd_tricks']] == -1).all()
+    assert (rows[:, E.COL['score_dd']] == -1).all() and (rows[:, E.COL['best_score']] == -1).all()
+    played = rows[rows[:, E.COL['passed_out']] == 0]
+    assert len(played) > 40  # south holds 15 points and is the dealer, so it nearly always opens
+    assert (played[:, E.COL['tricks_simple']] >= 0).all()
+    assert (rows[:, E.COL['bid1']] > 0).mean() > 0.95  # the first bid is south's opening
+    for r in rows:
+        bids = [int(r[E.COL['bid%d' % k]]) for k in (1, 2, 3, 4)]
+        assert all(b >= 1 for b in bids[:sum(b >= 1 for b in bids)])  # filled from the first, no gaps
+        if r[E.COL['passed_out']] == 0:  # the contract is at least as high as the first bid
+            assert E.bid_index(int(r[E.COL['level']]), int(r[E.COL['strain']])) >= bids[0] >= 1
+    assert (rows[:, E.COL['ns_hcp']] >= 15).all()  # south's 15 points are always in the total
+    again = E.evaluate_fixed(np.random.default_rng(3), 60, 2, SOUTH)
+    assert np.array_equal(rows, again)
+    assert np.array_equal(run_batches(E.evaluate_fixed, 40, seed=2, batch_size=10, workers=1, seat=2, codes=SOUTH),
+                          run_batches(E.evaluate_fixed, 40, seed=2, batch_size=10, workers=2, seat=2, codes=SOUTH))
+
+
+def test_evaluate_deals_checks_its_arguments():
+    deals = E.layouts(np.random.default_rng(1), 3, 2, south_cards())
+    with pytest.raises(ValueError):
+        E.evaluate_deals(deals, ['south'], solve=False)
+    if DD.AVAILABLE:
+        with pytest.raises(ValueError):
+            E.evaluate_deals(deals, ['south'] * 3, tables=[])
+
+
+@needs_dd
+def test_evaluate_fixed_with_the_solver_fills_the_double_dummy_columns():
+    rows = E.evaluate_fixed(np.random.default_rng(3), 24, 2, SOUTH, solve=True)
+    played = rows[rows[:, E.COL['passed_out']] == 0]
+    assert (played[:, E.COL['dd_tricks']] >= 0).all() and (played[:, E.COL['score_dd']] > -10_000).all()
+    assert (rows[:, E.COL['best_score']] >= 0).all()
+
+
+def test_a_passed_out_deal_without_the_solver():
+    from ..Card import Card
+    deal = E.deal_many(np.random.default_rng(5), 40)
+    weak = next(h for h in deal if max(x.hcp() for x in h) < 12)  # nobody can open, so everyone passes
+    rows = E.evaluate_deals([weak], ['north'], solve=False)
+    assert rows[0, E.COL['passed_out']] == 1 and rows[0, E.COL['bid1']] == -1 and rows[0, E.COL['met_level']] == -1

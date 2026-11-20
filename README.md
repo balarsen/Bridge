@@ -15,6 +15,7 @@ uv run pytest
 Notebooks: `uv run jupyter notebook Notebooks/`
 
 `Notebooks/Play one hand.ipynb` takes one deal through the double-dummy table, the auction, the play (a simple strategy against one that counts cards) and the score, then judges the bidding over 2,000 deals with a confusion matrix.
+`Notebooks/One South hand.ipynb` fixes one hand and looks at every way the other 39 cards could lie: what partner holds (exact), the auctions and results over 20,000 layouts, and what perfect play allows.
 
 `Notebooks/HCP stats.ipynb` is the statistics notebook: exact probabilities (`Bridge.Probability`) against a fast
 multi-threaded simulation (`Bridge.Simulation`, millions of deals per second), distribution fits (scipy and PyMC),

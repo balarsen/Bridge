@@ -9,13 +9,16 @@ The *highest bid that is met* is the highest contract (by level, then strain) th
 side that bid; a bid reached above it is an **overbid**, below it an **underbid**, equal is correct.  This is
 the hindsight view of the plan (all 52 cards known, perfect play), the first of the three levels.
 
-Numbers in the result array, one row per deal, columns named in `COLUMNS` (-1 where there is none).
+Numbers in the result array, one row per deal, columns named in `COLUMNS` (-1 where there is none).  The
+double-dummy columns (met_*, dd_tricks, score_dd, best_score) stay -1 when the deals are not solved
+(`solve=False`), which is how to look at many layouts of the same hand quickly.
 """
 import numpy as np
 
 from . import DoubleDummy as DD
 from .Auction import run_auction
 from .Bid import Bid
+from .Card import ALL_CARDS, Card
 from .Contract import Contract
 from .Deck import Deck
 from .Hand import Hand
@@ -25,7 +28,8 @@ from .Scoring import score
 from .Table import Table
 
 COLUMNS = ('passed_out', 'level', 'strain', 'declarer', 'side', 'met_level', 'met_strain', 'dd_tricks',
-           'tricks_simple', 'tricks_counting', 'score_simple', 'score_counting', 'score_dd', 'ns_hcp', 'best_score')
+           'tricks_simple', 'tricks_counting', 'score_simple', 'score_counting', 'score_dd', 'ns_hcp', 'best_score',
+           'bid1', 'bid2', 'bid3', 'bid4')  # the first four bids of the auction (`bid_index`, passes left out)
 COL = {name: i for i, name in enumerate(COLUMNS)}
 N_BIDS = 36  # pass / nothing, then the 35 bids 1 club ... 7 notrump
 
@@ -88,6 +92,80 @@ def deal_many(rng, count):
     return [list(Deck(shuffle=3, rng=rng).deal()) for _ in range(count)]
 
 
+def layouts(rng, count, seat, hand):
+    """
+    `count` deals in which the player at `seat` (0 north, 1 east, 2 south, 3 west) always holds `hand` (13
+    cards) and the other 39 cards are dealt at random to the other three players, each deal a different
+    placement.  Returns a list of deals (four hands each, in the order north, east, south, west).
+    """
+    cards = list(hand)
+    if len(cards) != 13 or len(set(cards)) != 13:
+        raise ValueError('hand must be 13 different cards')
+    rest = [c for c in ALL_CARDS if c not in set(cards)]
+    others = [p for p in range(4) if p != seat]
+    deals = []
+    for _ in range(count):
+        deck = Deck(rest, shuffle=3, rng=rng)
+        hands = [None] * 4
+        hands[seat] = Hand(cards)
+        for k, p in enumerate(others):
+            hands[p] = Hand(deck[13 * k:13 * (k + 1)])
+        deals.append(hands)
+    return deals
+
+
+def evaluate_deals(deals, dealers, open_hcp=None, vulnerable=False, tables=None, solve=True):
+    """
+    The rows of `evaluate` for the given deals (lists of four hands) with the dealer of each deal in `dealers`
+    (names).  `tables` are the double-dummy tables of the deals, computed here if None; `solve=False` skips the
+    double-dummy solution altogether and leaves its columns at -1.
+    """
+    count = len(deals)
+    if len(dealers) != count:
+        raise ValueError('one dealer per deal')
+    if not solve:
+        tables = None
+    elif tables is None:
+        tables = DD.dd_tables(deals)  # before any hand is played from
+    elif len(tables) != count:
+        raise ValueError('tables must hold one double-dummy table per deal')
+    out = np.full((count, len(COLUMNS)), -1, dtype=np.int16)
+    for i, hands in enumerate(deals):
+        auction = run_auction(hands, dealers[i], open_hcp=open_hcp)
+        row = out[i]
+        row[COL['ns_hcp']] = hands[0].hcp() + hands[2].hcp()
+        real = [c.bid for c in auction.calls if not c.bid.isPass]
+        for k, bid in enumerate(real[:4]):
+            row[COL['bid%d' % (k + 1)]] = bid_index(bid.value, Bid.strains.index(bid.suit))
+        met = {side: DD.highest_contract(tables[i], side) for side in ('ns', 'ew')} if solve else {}
+        if auction.contract is None:
+            row[COL['passed_out']] = 1
+            best = max((b for b in met.values() if b is not None), default=None)  # either side
+            if solve:
+                row[COL['best_score']] = max(best_dd_score(tables[i], side, vulnerable) for side in ('ns', 'ew'))
+        else:
+            contract = auction.contract
+            row[COL['passed_out']] = 0
+            row[COL['level']] = contract.level
+            row[COL['strain']] = Bid.strains.index(contract.strain)
+            row[COL['declarer']] = Position.positions.index(contract.declarer)
+            row[COL['side']] = 0 if contract.side == 'ns' else 1
+            best = met.get(contract.side)
+            for name, strategy in (('simple', simpleHigh), ('counting', countingHigh)):
+                tricks = _play(contract, hands, strategy)
+                row[COL['tricks_' + name]] = tricks
+                row[COL['score_' + name]] = score(contract, tricks, vulnerable)
+            if solve:
+                row[COL['best_score']] = best_dd_score(tables[i], contract.side, vulnerable)
+                dd = int(tables[i][Bid.strains.index(contract.strain)][Position.positions.index(contract.declarer)])
+                row[COL['dd_tricks']] = dd
+                row[COL['score_dd']] = score(contract, dd, vulnerable)
+        if best is not None:
+            row[COL['met_level']] = best.value
+            row[COL['met_strain']] = Bid.strains.index(best.suit)
+    return out
+
+
 def evaluate(rng, count, open_hcp=None, vulnerable=False, tables=None):
     """
     `count` random deals through auction, double-dummy solution, play and scoring; an int array of shape
@@ -96,41 +174,19 @@ def evaluate(rng, count, open_hcp=None, vulnerable=False, tables=None):
     `tables = DoubleDummy.dd_tables(deal_many(np.random.default_rng(seed), count))`, and pass `tables` in.
     """
     deals = deal_many(rng, count)
-    if tables is None:
-        tables = DD.dd_tables(deals)  # before any hand is played from
-    elif len(tables) != count:
-        raise ValueError('tables must hold one double-dummy table per deal')
-    out = np.full((count, len(COLUMNS)), -1, dtype=np.int16)
-    for i, hands in enumerate(deals):
-        dealer = Position.positions[i % 4]
-        auction = run_auction(hands, dealer, open_hcp=open_hcp)
-        row = out[i]
-        row[COL['ns_hcp']] = hands[0].hcp() + hands[2].hcp()
-        met = {side: DD.highest_contract(tables[i], side) for side in ('ns', 'ew')}
-        if auction.contract is None:
-            row[COL['passed_out']] = 1
-            best = max((b for b in met.values() if b is not None), default=None)  # either side
-            row[COL['best_score']] = max(best_dd_score(tables[i], side, vulnerable) for side in ('ns', 'ew'))
-        else:
-            contract = auction.contract
-            row[COL['passed_out']] = 0
-            row[COL['level']] = contract.level
-            row[COL['strain']] = Bid.strains.index(contract.strain)
-            row[COL['declarer']] = Position.positions.index(contract.declarer)
-            row[COL['side']] = 0 if contract.side == 'ns' else 1
-            best = met[contract.side]
-            row[COL['best_score']] = best_dd_score(tables[i], contract.side, vulnerable)
-            dd = int(tables[i][Bid.strains.index(contract.strain)][Position.positions.index(contract.declarer)])
-            row[COL['dd_tricks']] = dd
-            for name, strategy in (('simple', simpleHigh), ('counting', countingHigh)):
-                tricks = _play(contract, hands, strategy)
-                row[COL['tricks_' + name]] = tricks
-                row[COL['score_' + name]] = score(contract, tricks, vulnerable)
-            row[COL['score_dd']] = score(contract, dd, vulnerable)
-        if best is not None:
-            row[COL['met_level']] = best.value
-            row[COL['met_strain']] = Bid.strains.index(best.suit)
-    return out
+    return evaluate_deals(deals, [Position.positions[i % 4] for i in range(count)], open_hcp, vulnerable, tables)
+
+
+def evaluate_fixed(rng, count, seat, codes, dealer='south', open_hcp=None, vulnerable=False, solve=False):
+    """
+    `count` random placements of the other 39 cards around one fixed hand: the 13 cards in `codes` (a string
+    such as 'AsKs0s...', value then suit) at `seat`, the same dealer every time.  Same rows as `evaluate`;
+    the double-dummy solution is off by default as it is by far the slowest part.  Has the signature
+    `Harness.run_batches` expects.
+    """
+    hand = [Card.fromCode(codes[i:i + 2]) for i in range(0, len(codes), 2)]
+    deals = layouts(rng, count, seat, hand)
+    return evaluate_deals(deals, [dealer] * count, open_hcp, vulnerable, solve=solve)
 
 
 def _indices(rows):

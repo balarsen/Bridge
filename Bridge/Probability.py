@@ -63,31 +63,59 @@ def hcp_pmf(n_cards=13):
     return hcp_counts(n_cards) / math.comb(52, n_cards)
 
 
+def hcp_pmf_from_pool(aces, kings, queens, jacks, blanks, n_cards=13):
+    """
+    P(points = 0, 1, ... 40) for n_cards cards drawn at random from a pool holding the given number of aces,
+    kings, queens, jacks and blank cards (a full deck is 4, 4, 4, 4, 36).  The closed form: the counts drawn
+    (a, k, q, j, blanks) are multivariate hypergeometric,
+
+        C(aces,a) C(kings,k) C(queens,q) C(jacks,j) C(blanks, n-a-k-q-j) / C(pool, n),
+
+    and the points are 4a + 3k + 2q + j, so P(points = h) sums those over every (a, k, q, j) that make h.
+    """
+    pool = aces + kings + queens + jacks + blanks
+    if not 0 <= n_cards <= pool:
+        raise ValueError('n_cards must be between 0 and the size of the pool')
+    counts = [0] * 41
+    for a in range(aces + 1):
+        for k in range(kings + 1):
+            for q in range(queens + 1):
+                for j in range(jacks + 1):
+                    drawn_blanks = n_cards - a - k - q - j
+                    if 0 <= drawn_blanks <= blanks:
+                        counts[4 * a + 3 * k + 2 * q + j] += (math.comb(aces, a) * math.comb(kings, k) * math.comb(queens, q)
+                                                              * math.comb(jacks, j) * math.comb(blanks, drawn_blanks))
+    return np.array(counts) / math.comb(pool, n_cards)
+
+
 def hcp_pmf_multivariate_hypergeometric(n_cards=13):
     """
-    The same distribution as `hcp_pmf`, from the closed form instead of the dynamic program.
-
-    n_cards cards hold a aces, k kings, q queens, j jacks and the rest blanks (4 of each honor,
-    36 blanks) with the multivariate hypergeometric probability
-
-        C(4,a) C(4,k) C(4,q) C(4,j) C(36, n-a-k-q-j) / C(52, n)
-
-    and are worth 4a + 3k + 2q + j points, so P(points = h) is the sum over all (a, k, q, j) that
-    make h.  There is no single named family because of the weights 4, 3, 2, 1 (the *number* of
-    honors alone is exactly hypergeometric).  Slower than `hcp_pmf`, kept as an independent check.
+    The same distribution as `hcp_pmf`, from the closed form instead of the dynamic program: n_cards cards from a
+    full deck (4 each of aces, kings, queens and jacks, 36 blanks), see `hcp_pmf_from_pool`.  There is no single
+    named family because of the weights 4, 3, 2, 1 (the *number* of honors alone is exactly hypergeometric).
+    Slower than `hcp_pmf`, kept as an independent check.
     """
     if not 0 <= n_cards <= 52:
         raise ValueError('n_cards must be between 0 and 52')
-    counts = [0] * 41
-    for a in range(5):
-        for k in range(5):
-            for q in range(5):
-                for j in range(5):
-                    blanks = n_cards - a - k - q - j
-                    if 0 <= blanks <= 36:
-                        counts[4 * a + 3 * k + 2 * q + j] += (math.comb(4, a) * math.comb(4, k) * math.comb(4, q)
-                                                              * math.comb(4, j) * math.comb(36, blanks))
-    return np.array(counts) / math.comb(52, n_cards)
+    return hcp_pmf_from_pool(4, 4, 4, 4, 36, n_cards)
+
+
+def partner_hcp_pmf(hand):
+    """
+    P(partner holds 0, 1, ... 40 points) given my 13 cards: partner's 13 cards are a random draw from the 39 I
+    can not see, so this is `hcp_pmf_from_pool` on what is left of the honors.  `hand` is any 13 cards with
+    `.value` (as `Hand` or a list of `Card`).
+    """
+    cards = list(hand)
+    if len(cards) != 13:
+        raise ValueError('a hand has 13 cards')
+    held = {v: 0 for v in 'AKQJ'}
+    for card in cards:
+        key = str(card.value)
+        if key in held:
+            held[key] += 1
+    blanks_held = 13 - sum(held.values())
+    return hcp_pmf_from_pool(4 - held['A'], 4 - held['K'], 4 - held['Q'], 4 - held['J'], 36 - blanks_held, 13)
 
 
 def honor_count_pmf(n_cards=13):

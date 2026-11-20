@@ -2,6 +2,13 @@
 
 Completed work, newest first. The live map and open items are in [PROJECT_MAP.md](PROJECT_MAP.md).
 
+## 2026-11-20 — one South hand against every placement of the other 39 cards
+
+- **`Notebooks/One South hand.ipynb`**, the third notebook (the first two are untouched): South's 15 points and seven spades fixed, the other 39 cards placed at random. Exact partner points (mean 8.3, sd 3.3; P(10+) = 35%) and spade length against 20,000 sampled layouts (largest gap 0.4 percentage points); the auctions and contracts reached (4 spades 35%, 1NT by North 30%, 1 spade 20%, 2 spades 14%), make rates and scores by partner's points; tricks by simple and counting play; and 1,000 layouts solved double-dummy: make rate and mean score by level and strain (4 spades by South is best, +342), the confusion matrix for the hand, and game possible against reached (85% against 34%).
+- **`Probability.hcp_pmf_from_pool` and `partner_hcp_pmf`**: the closed form for any pool of unseen honors, and partner's exact points given my 13 cards (checked against listing every draw of a small pool and against the finite-population variance).
+- **`Evaluation.layouts`, `evaluate_deals(..., solve)`, `evaluate_fixed`, columns `bid1`..`bid4`**: a fixed hand with random placement of the rest, evaluation without the double-dummy solver (20,000 layouts in 8 s), and the first four bids of every auction. `evaluate` is unchanged in behaviour. 384 tests, 100% coverage.
+- **Why the 2,000-deal cell is slow** (profiled, see the DDS speed item in the map): more than 95% of the time is the double-dummy solver, 45-110 ms a deal; everything else is under 2.5 ms together.
+
 ## 2026-11-20 — the Hand rework, card counting, a double-dummy solver, a bidding system, and the "Play one hand" notebook
 
 Built in stages, each committed with CI green on Python 3.12, 3.13 and 3.14 (the double-dummy tests run on 3.12 and 3.13, on Linux as well as Windows, and skip on 3.14). 376 tests, 100% statement and branch coverage on 3.13.

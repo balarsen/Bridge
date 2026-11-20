@@ -52,6 +52,42 @@ def test_closed_form_matches_dynamic_program():
         P.hcp_pmf_multivariate_hypergeometric(53)
 
 
+def test_pool_version_with_a_full_deck_is_the_same_distribution():
+    assert P.hcp_pmf_from_pool(4, 4, 4, 4, 36, 13) == pytest.approx(P.hcp_pmf(13), abs=1e-15, rel=1e-12)
+    assert P.hcp_pmf_from_pool(4, 4, 4, 4, 36, 26) == pytest.approx(P.hcp_pmf(26), abs=1e-15, rel=1e-12)
+
+
+def test_pool_version_against_listing_every_draw_of_a_small_pool():
+    """2 aces, 1 king, 1 queen, 1 jack and 3 blanks: every way to draw 3 of the 8 cards"""
+    import itertools
+    pool_points = [4, 4, 3, 2, 1, 0, 0, 0]
+    expected = np.zeros(41)
+    draws = list(itertools.combinations(range(8), 3))
+    for d in draws:
+        expected[sum(pool_points[i] for i in d)] += 1 / len(draws)
+    assert P.hcp_pmf_from_pool(2, 1, 1, 1, 3, 3) == pytest.approx(expected, abs=1e-15)
+    assert P.hcp_pmf_from_pool(0, 0, 0, 0, 5, 2)[0] == 1.0  # nothing but blanks
+    with pytest.raises(ValueError):
+        P.hcp_pmf_from_pool(1, 1, 1, 1, 1, 6)
+
+
+def test_partner_hcp_pmf():
+    from ..Card import Card
+    south = [Card.fromCode(c) for c in 'As Ks 0s 9s 7s 4s 2s Ah 4h 9d Ac 9c 3c'.split()]  # 15 points, 7-2-1-3
+    pmf = P.partner_hcp_pmf(south)
+    assert pmf.sum() == pytest.approx(1) and len(pmf) == 41
+    mean, var = P.pmf_moments(pmf)
+    assert mean == pytest.approx(13 * 25 / 39)  # a third of the 25 points left
+    # what is left: 1 ace, 3 kings, 4 queens, 4 jacks (25 points, 63 points squared) among 39 cards
+    card_var = 63 / 39 - (25 / 39) ** 2
+    assert var == pytest.approx(13 * card_var * (39 - 13) / 38)  # finite population variance of 13 drawn of 39
+    assert pmf[26:].sum() == 0  # only 25 points are left
+    # partner's 13 cards out of 39: the same total as the whole table of what is left (25 points among 12 honors)
+    assert P.partner_hcp_pmf(list(south)) == pytest.approx(pmf)
+    with pytest.raises(ValueError):
+        P.partner_hcp_pmf(south[:12])
+
+
 def test_honor_count_is_hypergeometric():
     for n in (1, 13, 26):
         p = P.honor_count_pmf(n)
