@@ -2,7 +2,25 @@
 
 Completed work, newest first. The live map and open items are in [PROJECT_MAP.md](PROJECT_MAP.md).
 
-## 2026-11-20 — cleanup pass (the six cleanup items from the map; not yet committed)
+## 2026-11-20 — exact probabilities, fast simulation and the statistics notebook
+
+167 tests, **100% statement and branch coverage**. Pushed; CI (3.12 / 3.13 / 3.14) was green on the first GitHub run.
+
+- **`Bridge/Probability.py`** (numpy only): exact HCP distribution for any number of cards (dynamic program) and an independent closed form (`hcp_pmf_multivariate_hypergeometric`: the 625-term weighted sum of multivariate-hypergeometric probabilities), the honor count (exactly hypergeometric), all 39 hand patterns, suit-length, partner-length, combined-length, partner-aces and opponent-split distributions. Cross-checked against `scipy.stats.hypergeom`, brute-force enumeration of all pairs and triples of cards, and textbook values. (Several values I first typed from memory were wrong and were replaced by the computed ones.)
+- **`Bridge/Simulation.py`** (numba, multi-threaded): `deal_summaries(n, seed)` deals and summarizes n decks into per-seat per-suit lengths and honor bitmasks. Each deal has its own splitmix64 stream, so results depend only on the seed, never on the thread count or n (tested). A first version allocated per deal inside the parallel loop and was slower on 6 threads than on 1; working in blocks of 4096 deals fixed it (20M deals: 8.2 s serial, 1.5 s on 6 threads). About 25x faster than a vectorised numpy dealer and over 1000x faster than `Deck`/`Hand` objects. Kernels are `# pragma: no cover` (numba-compiled) and are verified against `Deck`/`Hand` for conventions and against `Probability` statistically.
+- **`Notebooks/HCP stats.ipynb` rewritten** (49 cells, 19 figures, all labelled, outputs saved): dealing speed and thread scaling; exact vs simulated HCP with z-scores and chi-square checks; **the exact distribution is a weighted multivariate hypergeometric** (the honor count alone is hypergeometric, and a plain hypergeometric cannot fit because it is under-dispersed while HCP is over-dispersed, variance/mean 1.71); eight fitted families scored against the exact pmf; PyMC fits with LOO comparison; hand shapes; partner statistics for points, suit lengths, fits, opponent splits, aces and shape agreement; who opens; a headline table.
+- **What it found:**
+  - Best parametric fit is the shifted gamma (KL 1.0e-3 nats), then log-normal; **Johnson SU collapses onto the log-normal** (a first single-start fit was stuck at its normal limit, an optimizer problem I fixed with multi-start). No smooth family gets the tails right (gamma overestimates P(25+ points) by about 100%, normal underestimates by about 50%).
+  - With 1,000 hands, LOO rejects the Poisson (-90) and the negative binomial (-8, about 4 SE) and cannot separate the discretized normal from the beta-binomial.
+  - Partner's points: correlation -1/3 exactly, mean `(40-h)/3`; the partnership has 26+ points in 12.6% of deals, even money with 19 points in my hand; after a balanced 15-17 opening partner averages 8.05 points.
+  - Suit lengths: holding 4, partner has 4+ in 33.7%; holding 5, partner has 3+ in 54.4%; an 8+ fit in a given suit 26.15%, in some suit 84.3%, in a major 48.9%; an 8-card fit splits 3-2 in 67.8%.
+  - Balanced hands pair with balanced hands slightly more than chance (50.5% vs 44.9%).
+  - **With the project's 14-point opening rule only 19.9% of hands open and nobody opens in 28.7% of deals** (an independence estimate says 41.2%; 28.2% +/- 0.6% from real `Deck`/`Hand` objects). `BeginningBidder` agrees with the 14-point rule on 1,200 object hands.
+- **Dependencies:** numba is now a runtime dependency; pymc and arviz are in the notebooks group (numba compile mode, there is no C compiler on this machine).
+- **Performance review** (measured, nothing changed): the TODOs are in PROJECT_MAP.md. Headline: 84% of the notebook's 388 s is the two `fit_all` calls, one objective evaluation costs 528 us with frozen scipy distributions vs 21 us with `scipy.special` (25x), and the object-based play path runs 2,200 rounds/s/thread with the cost in Python object overhead.
+- **Design decisions recorded in the map:** `Card` stays as is; `Hand` is to be reworked so strategies can count cards; scoring and whole games come later; explicit RNG plumbing for harnesses is a near-term TODO.
+
+## 2026-11-20 — cleanup pass (the six cleanup items from the map)
 
 139 -> **143 tests**, **100% statement and branch coverage** of `Bridge/` (tests excluded from the measure), HTML report in `htmlcov/` (git-ignored).
 

@@ -14,6 +14,10 @@ uv run pytest
 
 Notebooks: `uv run jupyter notebook Notebooks/`
 
+`Notebooks/HCP stats.ipynb` is the statistics notebook: exact probabilities (`Bridge.Probability`) against a fast
+multi-threaded simulation (`Bridge.Simulation`, millions of deals per second), distribution fits (scipy and PyMC),
+hand shapes, and partner statistics such as "if I hold 4 of a suit, how many does partner hold?".
+
 Optional, once per clone: keep Jupyter's kernel-version metadata out of git diffs while keeping
 the saved outputs (this edits `.git/config` and `.gitattributes`):
 
