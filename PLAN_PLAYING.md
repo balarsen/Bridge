@@ -2,6 +2,19 @@
 
 Status: plan, updated with Brian's decisions (2026-11-20). Nothing here is built yet. Current state of the repo is in [PROJECT_MAP.md](PROJECT_MAP.md), finished work in [DONE.md](DONE.md).
 
+## Status (2026-11-20)
+
+| Phase | State |
+|---|---|
+| P0 prerequisites | **done except RNG plumbing**: `Hand` tracks played cards, `Scoring`, `Contract`, declarer, dummy and the opening lead in `Round`; the harness gives reproducible parallel runs |
+| P1 suit-combination solver | not started (still the first thing to build; needs nothing else) |
+| P2 double-dummy | **spike passed** (correct, packaged for 3.12/3.13, safe in workers); weak point is speed, about 30 deals/s, see 7.2 |
+| P3 `Knowledge` and the layout sampler | `Knowledge` and the exact vacant-places probabilities **done**; the posterior sampler for hidden hands is not |
+| P4 single-dummy player | not started |
+| P5 evaluator | **level A (hindsight, double-dummy) done**, with the confusion matrix and regret, in `Notebooks/Play one hand.ipynb`; level B (distributions over the unseen cards) not started |
+| P6 auction likelihood, level C | not started |
+| P7 speed | harness done; DDS caching and canonical forms not |
+
 ## 1. Goal, and what "correct" means
 
 Play a hand (declarer and defenders) well enough that the *result* can be used to judge the bidding that led to it. The play must:
@@ -101,6 +114,8 @@ Use DDS (Bo Haglund's double-dummy solver, through the Python package `endplay`)
 3. **API fit:** it can solve from a partly played position (cards already played, a trick in progress, any hand to lead) and return the value of each legal card, not only the final tricks.
 4. **Packaging:** installs on Windows and on the CI platforms (Linux, Python 3.12 to 3.14); license acceptable (DDS is Apache-2.0; check `endplay`'s). Resolves for Python 3.14 here already.
 5. **Parallel:** safe to call from the harness's worker processes (one solver thread per worker).
+
+**Result of the spike (2026-11-20): criteria 1, 4 and 5 pass; 2 and 3 partly.** It agrees with our brute-force minimax on endings and on whole deals, it has wheels for Python 3.12 and 3.13 on Windows and Linux (none for 3.14, so the project's Python is pinned to 3.13), and it is safe in worker processes. It is slower than hoped: 82 ms per table, 34 ms per deal in batches (about 30 deals/s), and several worker processes help little because DDS uses all cores itself. Solving from the start of the play or from endings works; a trick in progress (cards already played to the current trick) is not yet exercised. Good enough for the evaluator at thousands of deals; the single-dummy player will want something faster or fewer solves.
 
 If it passes, DDS is the double-dummy engine and we write only the small brute-force oracle for the tests. If it fails a criterion, write our own numba solver for exactly the part that failed.
 

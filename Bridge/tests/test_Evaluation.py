@@ -58,6 +58,23 @@ def test_the_confusion_matrices_from_made_up_rows():
     assert c[2, 2] == 1 and c[2, 1] == 1 and c[1, 2] == 1 and c[0, 1] == 1 and c[2, 0] == 1
 
 
+def test_best_dd_score_from_made_up_tables():
+    def table(rows):
+        t = np.full((5, 4), 6, dtype=np.int8)
+        for strain, tricks in rows.items():
+            t[Bid.strains.index(strain)] = tricks
+        return t
+
+    assert E.best_dd_score(table({}), 'ns') == 0  # nothing makes
+    t = table({'hearts': (10, 3, 9, 3), 'notrump': (9, 4, 9, 4)})
+    assert E.best_dd_score(t, 'ns') == 420  # 4 hearts makes exactly: 120 + 300; 3NT makes: 400
+    assert E.best_dd_score(t, 'ns', vulnerable=True) == 620
+    assert E.best_dd_score(t, 'ew') == 0
+    assert E.best_dd_score(table({'spades': (6, 12, 6, 12)}), 'ew') == 980  # 6 spades: 180 + 300 + 500
+    # the better declarer counts: north takes 9 tricks (3 spades is a part score: 90 + 50), south 10 (4 spades)
+    assert E.best_dd_score(table({'spades': (9, 6, 10, 6)}), 'ns') == 420
+
+
 # ---------------------------------------------------------------------------------------------- the real thing
 @needs_dd
 def test_evaluate_rows_are_consistent():
@@ -76,6 +93,7 @@ def test_evaluate_rows_are_consistent():
         assert r[E.COL['score_simple']] == score(contract, int(r[E.COL['tricks_simple']]))
         assert r[E.COL['score_counting']] == score(contract, int(r[E.COL['tricks_counting']]))
         assert r[E.COL['score_dd']] == score(contract, int(r[E.COL['dd_tricks']]))
+        assert r[E.COL['best_score']] >= max(r[E.COL['score_dd']], 0)  # the best contract is at least as good
         assert 0 <= r[E.COL['ns_hcp']] <= 40
     made = rows[~passed]
     # double-dummy assumes perfect defence; the simple defenders concede tricks, so declarer can beat it, but
@@ -94,6 +112,19 @@ def test_evaluate_is_reproducible_and_does_not_depend_on_workers():
     assert a.shape == (48, len(E.COLUMNS))
     assert np.array_equal(a, b)
     assert not np.array_equal(a, run_batches(E.evaluate, 48, seed=10, batch_size=12, workers=1))
+
+
+@needs_dd
+def test_precomputed_tables_give_the_same_rows():
+    deals = E.deal_many(np.random.default_rng(8), 24)
+    assert len(deals) == 24 and all(len(h) == 4 for h in deals)
+    tables = DD.dd_tables(deals)
+    assert np.array_equal(E.evaluate(np.random.default_rng(8), 24, tables=tables),
+                          E.evaluate(np.random.default_rng(8), 24))
+    other = E.evaluate(np.random.default_rng(8), 24, open_hcp=15, tables=tables)  # same deals, another rule
+    assert not np.array_equal(other[:, E.COL['level']], E.evaluate(np.random.default_rng(8), 24, tables=tables)[:, E.COL['level']])
+    with pytest.raises(ValueError):
+        E.evaluate(np.random.default_rng(8), 24, tables=tables[:5])
 
 
 @needs_dd

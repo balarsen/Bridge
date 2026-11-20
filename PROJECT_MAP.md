@@ -8,12 +8,12 @@ Goal (README): automatically play bridge and collect statistics on various strat
 
 | Item | State |
 |---|---|
-| Python | 3.14 pinned (`.python-version`), `requires-python >=3.12` |
+| Python | **3.13** pinned (`.python-version`), `requires-python >=3.12`. Pinned to 3.13, not 3.14, because the double-dummy solver (`endplay`) has wheels for 3.12 and 3.13 only; CI still tests 3.14, where the double-dummy tests skip |
 | Tooling | uv; `uv sync`, `uv run pytest`; `pyproject.toml` + `uv.lock` |
-| Dependencies | runtime: numpy, numba. groups: `dev` (pytest, pytest-cov), `notebooks` (notebook, pandas, scipy, seaborn, matplotlib, nbstripout, pymc, arviz) |
-| Tests | **230 pass**, `filterwarnings = error`, so any warning fails the suite |
+| Dependencies | runtime: numpy, numba. groups: `dev` (pytest, pytest-cov), `dd` (endplay, Python < 3.14), `notebooks` (notebook, pandas, scipy, seaborn, matplotlib, nbstripout, pymc, arviz) |
+| Tests | **376 pass** (about 75 s, the double-dummy tests are most of that), `filterwarnings = error`, so any warning fails the suite |
 | Coverage | **100% statement and branch** of `Bridge/` (`.coveragerc`: `source = Bridge`, `branch = True`, tests omitted); `uv run pytest --cov=Bridge --cov-report=html` writes `htmlcov/` |
-| CI | `.github/workflows/ci.yml`, Python 3.12 / 3.13 / 3.14, dev group only; green on every push so far |
+| CI | `.github/workflows/ci.yml`, Python 3.12 / 3.13 / 3.14, dev and dd groups (the solver is skipped by its marker on 3.14); green on every push so far, including the double-dummy tests on Linux |
 | Remote | `origin` = github.com/balarsen/Bridge, `master` |
 
 ## 2. Module map
@@ -26,7 +26,7 @@ All code is in `Bridge/`. Seats are lower-case strings (`'north'`...), a `Positi
 | `Suit.py` | `Suit`, order spades, hearts, diamonds, clubs; `index`; `letterToSuit` | one immutable object per suit (`Suit('spades') is Suit('spades')`); equals and hashes like its name |
 | `Value.py` | `Value`, `'0'` is ten; `rank` 0..12 | one immutable object per value, hashable |
 | `Card.py` | `Card(value, suit)`; `toCode`/`fromCode`; `suit_index`, `rank`, `code` (= position in an unshuffled deck); `ALL_CARDS` | immutable (assigning an attribute raises), the 52 cards are created once and shared by `Deck` and `fromCode`. `<`/`>` are same-suit only (cross-suit gives False for both), so it is not a total order |
-| `Hand.py` | `Hand(list)`, exactly 13 cards at creation; `get_suit`, `clubs()`..., `highCard(suit)`, `lowCard(suit)`, `distro()`, `hcp()`, `longest()`, `strongest()`, `balanced()` | still a plain list in deal order; keeps a per-suit sorted cache (built on first use, updated by `remove`, dropped by any other list change). It shrinks as cards are played and remembers nothing else; the 13 check is only at creation |
+| `Hand.py` | `Hand(list)`, exactly 13 cards at creation; `original` (the 13 as dealt), `played` (cards played, in order), `play(card)`; `get_suit`, `clubs()`..., `highCard(suit)`, `lowCard(suit)`, `distro()`, `hcp()`, `longest()`, `strongest()`, `balanced()` | still a plain list in deal order of the cards left (`remove` removes without recording, `play` records); keeps a per-suit sorted cache (built on first use, updated by `remove`, dropped by any other list change); the 13 check is only at creation |
 | `Deck.py` | `Deck(list)`; `shuffle`, `cut`, `deal`, `toCode`/`fromCode`; `rng` parameter | `rng=None` shares one module-level generator, an int or `Generator` gives reproducible decks |
 | `Scorers.py` | `SimpleHighCardValue` (J1 Q2 K3 A4) over a deck or hands | `Hand.hcp()` uses its `cardScorer` |
 
@@ -42,7 +42,9 @@ All code is in `Bridge/`. Seats are lower-case strings (`'north'`...), a `Positi
 | `Position.py` | `Position`; `name`, `cycle`, `index2pos`, `pos2index`, `side` | single source of truth for seats; the helpers are dict lookups and build no objects |
 | `Table.py` | `Seat` (position + score), `Table` (north/east/south/west) | scores are stored but never updated |
 | `Trick.py` | `beats(card, other, trump)`; `Trick(list)`: `nextCard`, `leadSuit`, `currentWinner`, `wouldWin`, `winner`, `getCard`, `north`... | all trump logic lives here |
-| `Round.py` | `HandLogic` ABC, `simpleHigh`, `Round` (`play_trick`, `play`, `tricks`, `winners`) | the readable reference; strategies are plugins; trump is a suit or `'notrump'`; no declarer/contract concept |
+| `Round.py` | `HandLogic` ABC (`counts_cards`, `knowledge`), `simpleHigh`, `countingHigh`, `Round(table, hands, trump, logics, declarer=None)` (`play_trick`, `play`, `tricks`, `winners`, `dummy`) | the readable reference; strategies are plugins; with a declarer the opening lead is by declarer's left-hand opponent and dummy goes down after it; `Knowledge` objects are made only if a strategy counts cards. `countingHigh` leads a sure winner before its highest card (+0.44 tricks a deal in notrump against `simpleHigh` opponents) |
+| `Knowledge.py` | what one player knows: `observe`, `reveal`, `unseen`, `cards_left`, `is_void`, `outstanding`, `is_master`, `vacant_places`, `probability_holds` | exact probabilities from vacant places when two hands are hidden, verified against brute-force enumeration of every possible deal of the unseen cards; no sampling |
+| `Contract.py`, `Scoring.py` | `Contract(level, strain, declarer, doubled)`; `score(contract, tricks, vulnerable)`, `ns_score` | duplicate scoring (part score, game, slam, doubles, redoubles, vulnerability), checked against published values |
 | `FastRound.py` | integer-card engine: `play_deck`, `play_round(rng)`, `simulate(rng, n, trump, leader)` | `simpleHigh` at all four seats only; identical to `Round` (tested); 14.5x faster. `simulate` is a ready-made `Harness` task |
 | `Harness.py` | `run_batches(task, n, seed, batch_size, workers, reduce, **config)`: process pool, one seed per batch | results depend only on `(seed, batch_size)`, never on the worker count. 4.4x on 6 cores; the pool costs about 0.8 s per call, so use it for runs of several seconds |
 
@@ -50,8 +52,16 @@ All code is in `Bridge/`. Seats are lower-case strings (`'north'`...), a `Positi
 | Module | Role | Notes |
 |---|---|---|
 | `Bid.py` | `Bid(level, strain)` or `Bid('pass')`; total ordering; `isPass` | no double / redouble |
-| `Bidding.py` | `Bidding(list)` auction, `Redeal`, `Bidding_logic` ABC | does not enforce turn order in `addBid` (`nextBid` goes in order); the winning bid is returned, but nothing turns it into a trump/declarer |
-| `BeginningBidder.py` | opening bid for a beginner: 14+ HCP | `raiseBid` / `jumpBid` are stubs |
+| `Bidding.py` | `Bidding(list)` auction, `Redeal`, `Bidding_logic` ABC | does not enforce turn order in `addBid` (`nextBid` goes in order) |
+| `BeginningBidder.py` | opening bid for a beginner: 14+ HCP | `raiseBid` / `jumpBid` are stubs; not used by `Auction` (its rule is superseded by `PointsAndFit`) |
+| `PointsAndFit.py` | a small documented natural system: opening (12+, 1NT, 2NT), responses, the opener's second call from combined points and fit, slam raise; `reason` for every call | the other side does not compete; only finds major-suit and notrump fits (it missed an 8-card diamond fit in the notebook's example); rules in the module docstring |
+| `Auction.py` | `run_auction(hands, dealer, system, open_hcp)` -> `AuctionResult` (`calls` with reasons, `contract`, `rounds()`) | finds the declarer (first of the side to bid the strain), handles pass-outs |
+
+### Judging bids
+| Module | Role | Notes |
+|---|---|---|
+| `DoubleDummy.py` | adapter around DDS (`endplay`): `dd_table`, `dd_tables` (batches), `solve_leads`, `highest_contract` | optional (`dd` group, Python 3.12 and 3.13). Proved against our own brute-force minimax on 1,200 endings, against solving every opening lead on whole deals, and in worker processes. Slow here: 82 ms a table, 34 ms a deal in batches (about 30 deals/s) |
+| `Evaluation.py` | `evaluate(rng, count, open_hcp, vulnerable, tables)` (a `Harness` task): auction, double-dummy table, play by `simpleHigh` and `countingHigh`, scores; `confusion_matrix`, `category_matrix`, `over_under`, `best_dd_score` | hindsight judging (level A of the plan): the bid reached against the highest contract that makes double-dummy, and the regret in points |
 
 ### Non-code
 | File | Role |
@@ -60,6 +70,7 @@ All code is in `Bridge/`. Seats are lower-case strings (`'north'`...), a `Positi
 | `DONE.md` | history of finished work |
 | `PLAN_PLAYING.md` | the plan for playing hands to judge bids (decisions, phases P0 to P7, open questions) |
 | `Findings.txt` | 2012 result plus a 2026 addendum (result 2 does not reproduce) |
+| `Notebooks/Play one hand.ipynb` | one deal through the double-dummy table, the auction with reasons, trick-by-trick play (simple against counting), the score, and 2,000 deals with the confusion matrix, regret and an opening-threshold sweep. HTML displays of hands, tables and play; outputs saved; about 3 min to run; not run by CI |
 | `Notebooks/HCP stats.ipynb` | statistics notebook: exact vs simulated, distribution fits (scipy and PyMC), shapes, partner statistics, openers/redeal. 49 cells, 19 figures, outputs saved; about 6.5 min to run, 84% of it the fitting cells; not run by CI |
 | `.github/workflows/ci.yml` | tests on 3.12-3.14 |
 | `pyproject.toml`, `uv.lock`, `.python-version`, `.coveragerc`, `.gitignore`, `License.txt` (BSD-3) | config |
@@ -82,6 +93,10 @@ Bid ── BeginningBidder (also Bidding_logic, Hand API)
 
 Position, Suit, Value ── Simulation (numba)       Position, Suit ── FastRound
 Probability (numpy only)                          Harness (numpy only; runs any task, e.g. FastRound.simulate)
+
+Hand ── Knowledge ── Round (countingHigh)         Bid, Contract ── Scoring
+Bidding ── PointsAndFit ── Auction ──┐
+DoubleDummy (endplay) ───────────────┴── Evaluation (uses Round, Scoring, Deck, Harness)
 ```
 
 ## 3. Direction
@@ -93,21 +108,20 @@ Probability (numpy only)                          Harness (numpy only; runs any 
 ## 4. Open items
 
 ### Waiting for Brian
+- Review `Notebooks/Play one hand.ipynb` (new) and confirm the **Python 3.13 pin** (needed for the double-dummy solver; one line in `.python-version`, revert when `endplay` has 3.14 wheels).
 - Review `Notebooks/HCP stats.ipynb`. Questions it raises: which exact-hypergeometric PyMC model to build first (below), whether the 14-point opening rule should change (nobody opens in 28.7% of deals), whether to speed up its fitting cells (performance item 1).
 - The six open questions at the end of [PLAN_PLAYING.md](PLAN_PLAYING.md).
 
 ### Prerequisites shared with the playing plan
-- **TODO: rework `Hand` so strategies can count cards.** Today `Hand` is a `list` subclass that shrinks as cards are played and remembers nothing. Make it a small class that keeps the original 13 cards, the cards played so far (and by whom, in which trick), and what is still unseen, so a strategy can ask "which spades are still out?", "how many trumps have been played?". Keep the `get_suit`/`hcp`/`longest`/`strongest`/`balanced` API. Touches `Hand`, `Round` (which removes cards from hands today), `simpleHigh` and tests. Natural companion to the exact "unseen cards are hypergeometric" results in `Probability`. The per-suit cache that `Hand` already has is the part of this that the performance work covered; what is left is the memory of played cards.
-- **TODO: scoring and whole games** (contract, declarer, tricks over/under, vulnerability, doubles/redoubles, part-score and game bonuses, rubber/duplicate scoring, dealer and vulnerability rotation over a session). The expected score in the playing plan needs duplicate scoring first.
+- **TODO: whole games** (rubber and duplicate scoring over a session, dealer and vulnerability rotation); single-hand scoring is done (`Scoring`).
 - **TODO (soon): explicit RNG plumbing.** `Deck(rng=None)` shares one module-level generator across all decks, fine for scripts but not for a harness. Still needed: a harness or `Game` object that owns a `np.random.Generator` and passes it to every `Deck`; no use of the shared default inside library code paths; tests that the same seed reproduces a whole session. (`Harness` and `Simulation` already derive reproducible streams from a seed.)
 
 ### Bridge features (README roadmap)
-1. Bidding beyond the opening bid: `raiseBid`, `jumpBid`, double / redouble, responder logic.
-2. From auction to play: turn the winning bid into contract, declarer and trump; opening lead by the left-hand opponent; dummy.
-3. More play strategies and bidding strategies behind the existing `HandLogic` / `Bidding_logic` interfaces, then a harness to compare them statistically (the project's stated goal).
+1. **Improve the bidding system** (the notebook's confusion matrix shows where): it only finds major-suit and notrump fits (an 8-card minor fit was missed in the example), is cautious (about 72% of bids are below what makes double-dummy by exact bid, 34% by kind of contract), reaches notrump in 47% of contracts, and never competes. Then doubles and redoubles, and a real system.
+2. **Retire or merge `BeginningBidder`:** `Auction` uses `PointsAndFit` (opens at 12); `BeginningBidder` (14+) is only used by its own tests and the old statistics notebook. Decide whether to keep it as a "beginner" level.
+3. More play strategies behind `HandLogic` (counting is the first), compared statistically with `Evaluation`.
 4. A full-game loop: deal, bid, play, score, repeat, with seeded runs.
-5. **Redeal rule:** with the 14-point opening rule nobody opens in about 28.7% of deals (an independence estimate would say 41.2%); real bridge uses 12-13 points. Decide whether `BeginningBidder.OPEN_HCP` should be lower, or add a rule (for example the rule of 20) so auctions start.
-6. Strategies can now be scored against exact baselines (for example a notrump opening should leave partner about 8.05 points on average).
+5. Strategies can be scored against exact baselines (for example a notrump opening should leave partner about 8.05 points on average).
 
 ### Statistics / PyMC ideas
 - **Use the exact multivariate hypergeometric as a PyMC model.** Its likelihood is exact (`C(4,a) C(4,k) C(4,q) C(4,j) C(36,n-a-k-q-j) / C(52,n)`), so it can carry real inference instead of a parametric approximation. Candidates: infer the deck/honor composition from observed hands; Bayesian check that a shuffle or dealing machine is fair (honor counts per hand against the exact pmf); partner-hand inference (posterior of partner's points, suit lengths and aces given my hand and the bidding so far); a hierarchical model across players or sessions.
@@ -128,7 +142,8 @@ Probability (numpy only)                          Harness (numpy only; runs any 
 3. **Low priority, only if we want billions of deals:** streaming reducers in the numba kernels (accumulate joint HCP counts, suit-length matrices and shape counts per thread and merge, so no per-deal arrays; today 100M deals would need 3.2 GB); compute `hcp`/`aces` in the kernel or `cached_property` (the `Deals` properties recompute on every access, sorting shapes for 16M hands takes about 1.2 s); a partial shuffle when only the two partner hands matter (up to 2x).
 4. **Decision later:** a compiled (numba or bitboard) play engine for strategies other than `simpleHigh`; the search-oriented one is part of [PLAN_PLAYING.md](PLAN_PLAYING.md). Cost: plain-Python strategies stay at object speed, so compile only what large comparisons need.
 5. **TODO: keep the numbers honest.** The figures above are one-off measurements. Add a small benchmark script (rounds/s, deals/s, notebook cell times from the executed notebook's timing metadata, which `nbconvert` records) to re-run before and after each change; not part of the CI gate.
-6. **Do not optimise:** `Bidding`, `BeginningBidder`, `Position`'s string API, `deal()` (2 us), `Probability` (7 ms and cached), the test suite (8 s).
+6. **DDS speed (measured):** 82 ms per double-dummy table, 34 ms per deal in batches of 32, about 30 deals a second using all cores; running it in several worker processes oversubscribes the cores (6 workers gave only 2x). Fine for thousands of deals, too slow for a sampling player that solves many positions a decision. Options when that matters: batch more cleverly, solve fewer strains, or write our own numba solver.
+7. **Do not optimise:** `Bidding`, `BeginningBidder`, `Position`'s string API, `deal()` (2 us), `Probability` (7 ms and cached), the test suite (8 s).
 
 ### Housekeeping
 - **nbstripout** is a dependency but not installed in the repo; the README has the one-time opt-in command.

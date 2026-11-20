@@ -5,7 +5,7 @@ and collect statistics on various strategies.
 
 ## Setup
 
-The project uses [uv](https://docs.astral.sh/uv/) (Python 3.12+, developed on 3.14).
+The project uses [uv](https://docs.astral.sh/uv/) (Python 3.12+, developed on 3.13: the double-dummy solver, the `dd` group, has wheels for 3.12 and 3.13 only).
 
 ```
 uv sync          # creates .venv with the package, test and notebook dependencies
@@ -13,6 +13,8 @@ uv run pytest
 ```
 
 Notebooks: `uv run jupyter notebook Notebooks/`
+
+`Notebooks/Play one hand.ipynb` takes one deal through the double-dummy table, the auction, the play (a simple strategy against one that counts cards) and the score, then judges the bidding over 2,000 deals with a confusion matrix.
 
 `Notebooks/HCP stats.ipynb` is the statistics notebook: exact probabilities (`Bridge.Probability`) against a fast
 multi-threaded simulation (`Bridge.Simulation`, millions of deals per second), distribution fits (scipy and PyMC),
