@@ -1,52 +1,52 @@
+import functools
 
-from . import suits
 
-
+@functools.total_ordering
 class Bid(object):
-    def __init__(self, value, suit, trump=False):
-        if not (value in list(range(1,8))+['pass']):
-            raise(ValueError("Bid has bad value: {0}".format(value)))
-        if not (suit in suits):
-            raise(ValueError("Bid has bad suit: {0}".format(suit)))
+    """
+    A bid is a level (1-7) and a strain, or a pass.
+
+    Bids order by level and then by strain, clubs < diamonds < hearts < spades < notrump.
+    A pass has no strain and orders below every real bid.
+    """
+    strains = ('clubs', 'diamonds', 'hearts', 'spades', 'notrump')
+    levels = tuple(range(1, 8))
+
+    def __init__(self, value, suit=None):
+        if value != 'pass' and value not in Bid.levels:
+            raise(ValueError(f"Bid has bad value: {value!r}"))
+        if value == 'pass':
+            suit = None  # a pass has no strain, anything handed in is ignored
+        elif suit not in Bid.strains:
+            raise(ValueError(f"Bid has bad suit: {suit!r}, must be one of {Bid.strains}"))
         self.value = value
-        self.suit  = suits[suit]
+        self.suit = suit
+
+    @property
+    def isPass(self):
+        return self.value == 'pass'
+
+    def _key(self):
+        if self.isPass:
+            return (0, -1)
+        return (self.value, Bid.strains.index(self.suit))
 
     def __eq__(self, other):
-        if self.value == other.value and self.suit == other.suit:
-            return True
-        else:
-            return False
-
-    def __ne__(self, other):
-        if self.value == other.value and self.suit == other.suit:
-            return False
-        else:
-            return True
-
-    def __gt__(self, other):
-        if self.value > other.value:
-            return True
-        elif suits[self.suit] > suits[other.suit]:
-            return True
-        else:
-            return False
+        if not isinstance(other, Bid):
+            return NotImplemented
+        return self._key() == other._key()
 
     def __lt__(self, other):
-        if self.value < other.value:
-            return True
-        elif suits[self.suit] < suits[other.suit]:
-            return True
-        else:
-            return False
+        if not isinstance(other, Bid):
+            return NotImplemented
+        return self._key() < other._key()
+
+    def __hash__(self):
+        return hash(self._key())
 
     def __repr__(self):
-        if self.value == 'pass':
-            return '{value}'.format(value=self.value, suit=suits[self.suit])
-        elif self.value == 1:
-            return '{value} {suit}'.format(value=self.value, suit=suits[self.suit][:-1])
-        else:
-            return '{value} {suit}'.format(value=self.value, suit=suits[self.suit])
+        if self.isPass:
+            return 'pass'
+        return f'{self.value} {self.suit}'
 
     __str__ = __repr__
-
-

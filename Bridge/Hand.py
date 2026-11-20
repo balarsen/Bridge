@@ -1,5 +1,6 @@
 import functools
 
+from .Scorers import SimpleHighCardValue
 from .Suit import Suit
 
 
@@ -10,7 +11,7 @@ class Hand(list):
 
     def __init__(self, c):
         if len(c) != 13:
-            raise (ValueError('wrong number of cards in a hard'))
+            raise (ValueError('wrong number of cards in a hand'))
         super(Hand, self).__init__(c)
 
     def __str__(self):
@@ -50,19 +51,31 @@ class Hand(list):
             ans.append((s, len(self.get_suit(s))))
         return tuple(ans)
 
-    # def balanced(self):
-    #     """
-    #     count the number of each suit looking for balanced hands
-    #     balanced hands are 4,3,3,3  5,3,3,2  4,4,3,2
-    #
-    #     #TODO, likely this goes in a scoring class
-    #     """
-    #     dist = set([v[1] for v in self.distro()])
-    #     if dist == set([2, 3, 4, 4]):
-    #         return True
-    #     elif dist == set([2, 3, 3, 5]):
-    #         return True
-    #     elif dist == set([3, 3, 3, 4]):
-    #         return True
-    #     else:
-    #         return False
+    def hcp(self):
+        """
+        high card points of the whole hand (A=4, K=3, Q=2, J=1)
+        """
+        return sum(SimpleHighCardValue.cardScorer(c) for c in self)
+
+    def longest(self):
+        """
+        [(suit, length), ...] longest first.  Ties keep the bridge suit rank order,
+        spades, hearts, diamonds, clubs
+        """
+        return sorted(((s, n) for s, n in self.distro()), key=lambda x: -x[1])
+
+    def strongest(self):
+        """
+        [(suit, high card points), ...] strongest first.  Ties keep the bridge suit rank order,
+        spades, hearts, diamonds, clubs
+        """
+        pts = ((s, sum(SimpleHighCardValue.cardScorer(c) for c in self.get_suit(s)))
+               for s in Suit.suits)
+        return sorted(pts, key=lambda x: -x[1])
+
+    def balanced(self):
+        """
+        balanced hands are 4,3,3,3  4,4,3,2  5,3,3,2
+        """
+        shape = tuple(sorted((n for _, n in self.distro()), reverse=True))
+        return shape in ((4, 3, 3, 3), (4, 4, 3, 2), (5, 3, 3, 2))

@@ -1,7 +1,6 @@
-import itertools
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 
-import numpy as np
+from .Position import Position
 
 """
 this module is quite complicated, it will need to both do the mechanics of bidding
@@ -13,9 +12,7 @@ class Redeal(Exception):
     pass
 
 
-class Bidding_logic(object):
-    __metaclass__ = ABCMeta
-
+class Bidding_logic(ABC):
     def __init__(self, hand):  # create an instance per bidder
         self.hand = hand
 
@@ -24,52 +21,61 @@ class Bidding_logic(object):
         pass
 
     @abstractmethod
-    def raiseBid(self, bids):
+    def raiseBid(self, bids=None):
         pass
 
     @abstractmethod
-    def jumpBid(self, bids):
+    def jumpBid(self, bids=None):
         pass
 
 
 class Bidding(list):
+    """
+    The auction.  Each entry is a (seat, Bid).  The auction is over after three
+    passes in a row once someone has bid, or after four passes if nobody has
+    (that is a Redeal)
+    """
     def __init__(self, leader='north'):
-        self.leader = leader.title()
-        _seats = ['North', 'East', 'South', 'West']
-        leader_ind = _seats.index(self.leader)
-        self._seats = np.roll(['North', 'East', 'South', 'West'], leader_ind).tolist()
-        self.nextBidder = itertools.cycle(self._seats)
+        super().__init__()
+        self.leader = str(Position(leader))
+        self._seats = list(Position.positions[Position.positions.index(self.leader):]
+                           + Position.positions[:Position.positions.index(self.leader)])
         self._passCount = 0
 
+    @property
+    def complete(self):
+        """True once the auction has ended"""
+        return self._passCount >= (3 if self.opened else 4)
+
     def addBid(self, seat, bid):
-        if self._passCount >= 4:  # done
-            raise (ValueError('Four passes have already occured'))
-        if len(self) > 0:  # new bid mist be larger than the old one
-            try:
-                old_winner = self._winningBid()[1]
-            except TypeError:
-                old_winner = None
-            if old_winner is not None:  # we have another bid
-                if not bid > old_winner:
-                    raise (ValueError('New bid must be higher than old bid'))
-        if bid.value == 'pass':
+        """
+        add a bid by seat; returns None while bidding continues or the (seat, winning Bid)
+        when the auction is over.  Raises Redeal if all four pass without a bid
+        """
+        seat = str(Position(seat))
+        if self.complete:
+            raise (ValueError('The auction is already over'))
+        if not bid.isPass:  # a new bid must be larger than the old one
+            old_winner = self._winningBid()
+            if old_winner is not None and not bid > old_winner[1]:
+                raise (ValueError('New bid must be higher than old bid'))
+        if bid.isPass:
             self._passCount += 1
         else:
             self._passCount = 0
         self.append((seat, bid))
-        if self._passCount >= 4:  # done
+        if self.complete:
             if not self.opened:  # no one opened
                 raise (Redeal("No one opened"))
             return self._winningBid()
-        else:
-            return None
+        return None
 
     def _winningBid(self):
         """
         figure the winning bid
         """
         for seat, bid in reversed(self):
-            if bid.value != 'pass':
+            if not bid.isPass:
                 return (seat, bid)
 
     def nextBid(self, bid):
@@ -81,9 +87,6 @@ class Bidding(list):
     @property
     def opened(self):
         """
-        return True if someonehas opened, False otherwise
+        return True if someone has opened, False otherwise
         """
-        for bid in self:
-            if bid[1].value != 'pass':
-                return True
-        return False
+        return any(not bid.isPass for _, bid in self)

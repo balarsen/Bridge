@@ -19,6 +19,22 @@ def test_eq():
     assert fourS2 == fourS
 
 
+def test_ne_equal_cards():
+    """equal cards must not be !="""
+    assert (Card('4', 'spades') != Card('4', 'spades')) is False
+    assert (Card('4', 'spades') != Card('4', 'hearts')) is True
+
+
+def test_hash():
+    assert len({Card('4', 'spades'), Card('4', 'spades'), Card('4', 'hearts')}) == 2
+    assert hash(Card('4', 'spades')) == hash(Card('4', 'spades', trump=True))
+
+
+def test_eq_other_types():
+    assert Card('4', 'spades') != '4s'
+    assert not Card('4', 'spades') == '4s'
+
+
 def test_ne():
     fourS = Card('4', 'spades')
     fourH = Card('4', 'hearts')

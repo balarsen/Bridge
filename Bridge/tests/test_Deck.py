@@ -20,14 +20,17 @@ def test_shuffle():
 
 
 def test_cut():
-    np.random.default_rng(8675309)
     d1 = Deck()
     d2 = copy.deepcopy(d1)
     d1.cut(10)
     assert d1[0] == d2[10]
-    d1 = Deck()
-    d1.cut()
-    assert d1[0] != d2[0]
+    assert len(d1) == 52
+    # a random cut always moves the deck
+    for i in range(200):
+        d1 = Deck()
+        d1.cut()
+        assert d1[0] != d2[0]
+        assert len(d1) == 52
 
 
 def test_eq():

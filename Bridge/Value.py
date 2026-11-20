@@ -7,17 +7,29 @@ class Value(object):
             raise (ValueError(f'Bad value, {value}, {Value.values}'))
         self.value = value
 
+    @property
+    def rank(self):
+        """0 for a deuce up to 12 for an ace"""
+        return Value.values.index(self.value)
+
     def __eq__(self, other):
+        if not isinstance(other, Value):
+            return NotImplemented
         return self.value == other.value
 
     def __ne__(self, other):
+        if not isinstance(other, Value):
+            return NotImplemented
         return self.value != other.value
 
+    def __hash__(self):
+        return hash(self.value)
+
     def __gt__(self, other):
-        return self.values.index(self.value) > self.values.index(other.value)
+        return self.rank > other.rank
 
     def __lt__(self, other):
-        return self.values.index(self.value) < self.values.index(other.value)
+        return self.rank < other.rank
 
     def __str__(self):
         return f"{self.value}"

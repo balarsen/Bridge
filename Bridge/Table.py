@@ -1,38 +1,21 @@
+from .Position import Position
 
-from . import positions
 
-
-class position(object):
+class Seat(object):
+    """
+    one seat at the table and the score it has accumulated
+    """
     def __init__(self, pos):
-        if pos not in positions:
-            raise(ValueError('Bad position input: {0}, must be {1}'.format(pos, positions)))
-        self.position = pos
+        self.position = Position(pos)
         self.score = 0
 
 
-class Table(list):
+class Table(object):
     """
     class to hold the table and keep the overall score
     """
     def __init__(self):
-        self.north = position('North')
-        self.east  = position('East')
-        self.south = position('South')
-        self.west  = position('West')
-
-
-def index2pos(leader, index):
-    """
-    given an index return the position of the winner
-    """
-    start = positions.index(leader)
-    ind = (index + start) % 4
-    return positions[ind]
-   
-def pos2index(leader, pos):
-    """
-    given an index return the position of the winner
-    """
-    start = positions.index(leader)
-    return (positions.index(pos) - start) % 4
-
+        self.north = Seat('north')
+        self.east = Seat('east')
+        self.south = Seat('south')
+        self.west = Seat('west')

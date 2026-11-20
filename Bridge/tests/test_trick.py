@@ -1,63 +1,105 @@
+import pytest
 
-import unittest
-
-from .. import Card
-from .. import Trick
-from .. import positions
-
-class TestTrick(unittest.TestCase):
-    def test_init(self):
-        """init does some checking"""
-        self.assertRaises(ValueError, Trick.Trick, leader='badval')
-        tck = Trick.Trick()
-        self.assertEqual('North', tck.leader)
-        self.assertTrue(tck.trump is None)
-        tck = Trick.Trick(leader='South', trump='diamonds')
-        self.assertEqual('South', tck.leader)
-        self.assertEqual('diamonds', tck.trump)
-
-    def test_nextCard(self):
-        """should be able to add cards"""
-        t = Trick.Trick(trump='hearts')
-        t.nextCard(Card.Card(3,3))
-        self.assertEqual(t.nCards, len(t))
-        self.assertEqual(t.nCards, 1)
-        t.nextCard(Card.Card(5,2))
-        self.assertRaises(ValueError, t.nextCard, Card.Card(5,2))
-        t.nextCard(Card.Card(7,3))
-        t.nextCard(Card.Card(9,3))
-        self.assertEqual(t.nCards, 4)
-        self.assertRaises(IndexError, t.nextCard, Card.Card(10,3))
-        self.assertFalse(t[0].trump)
-        self.assertTrue( t[1].trump)
-        self.assertFalse(t[2].trump)
-        self.assertFalse(t[3].trump)
-
-    def test_winner(self):
-        """winner should be named correctly"""
-        t = Trick.Trick(trump='hearts')
-        t.nextCard(Card.Card(3,3))
-        self.assertRaises(IndexError, t.winner)
-        t.nextCard(Card.Card(5,2))
-        t.nextCard(Card.Card(7,3))
-        t.nextCard(Card.Card(9,3))
-        self.assertEqual(t.winner(), (Card.Card(5,2), 'East'))
-
-    def test_getCard(self):
-        """should be able to get cards played"""
-        t = Trick.Trick(trump='hearts')
-        for p in positions:
-            self.assertTrue(t.getCard(p) is None)
-        t.nextCard(Card.Card(3,3))
-        t.nextCard(Card.Card(4,3))
-        t.nextCard(Card.Card(5,3))
-        t.nextCard(Card.Card(6,3))
-        self.assertEqual(t.north, Card.Card(3,3))
-        self.assertEqual(t.east, Card.Card(4,3))
-        self.assertEqual(t.south, Card.Card(5,3))
-        self.assertEqual(t.west, Card.Card(6,3))
-
-if __name__ == '__main__':
-    unittest.main()
+from ..Card import Card
+from ..Position import Position
+from ..Trick import Trick
 
 
+def test_init():
+    """init does some checking"""
+    with pytest.raises(ValueError):
+        Trick(leader='badval')
+    tck = Trick()
+    assert tck.leader == 'north'
+    assert tck.trump is None
+    tck = Trick(leader='south', trump='diamonds')
+    assert tck.leader == 'south'
+    assert tck.trump == 'diamonds'
+
+
+def test_nextCard():
+    """should be able to add cards"""
+    t = Trick(trump='hearts')
+    t.nextCard(Card.fromCode('3d'))
+    assert t.nCards == len(t) == 1
+    t.nextCard(Card.fromCode('5h'))
+    with pytest.raises(ValueError):
+        t.nextCard(Card.fromCode('5h'))
+    t.nextCard(Card.fromCode('7d'))
+    t.nextCard(Card.fromCode('9d'))
+    assert t.nCards == 4
+    with pytest.raises(IndexError):
+        t.nextCard(Card.fromCode('0d'))
+    assert not t[0].trump
+    assert t[1].trump
+    assert not t[2].trump
+    assert not t[3].trump
+
+
+def test_winner():
+    """winner should be named correctly"""
+    t = Trick(trump='hearts')
+    t.nextCard(Card.fromCode('3d'))
+    with pytest.raises(IndexError):
+        t.winner()
+    t.nextCard(Card.fromCode('5h'))
+    t.nextCard(Card.fromCode('7d'))
+    t.nextCard(Card.fromCode('9d'))
+    assert t.winner() == (Card('5', 'hearts'), 'east')
+
+
+def test_winner_no_trump():
+    t = Trick(leader='west')
+    for c in ('3d', 'Ah', '9d', '5s'):  # off suit cards never win
+        t.nextCard(Card.fromCode(c))
+    assert t.winner() == (Card('9', 'diamonds'), 'east')  # west, north, east, south
+    t = Trick(leader='west', trump='notrump')
+    for c in ('3d', 'Ah', '9d', '5s'):
+        t.nextCard(Card.fromCode(c))
+    assert t.winner() == (Card('9', 'diamonds'), 'east')  # west, north, east, south
+
+
+def test_leadSuit_currentWinner():
+    t = Trick(leader='east', trump='spades')
+    with pytest.raises(IndexError):
+        t.leadSuit
+    with pytest.raises(IndexError):
+        t.currentWinner()
+    t.nextCard(Card.fromCode('5d'))
+    assert t.leadSuit == 'diamonds'
+    assert t.currentWinner() == (Card('5', 'diamonds'), 'east')
+    t.nextCard(Card.fromCode('Kd'))
+    assert t.currentWinner() == (Card('K', 'diamonds'), 'south')
+    t.nextCard(Card.fromCode('2s'))
+    assert t.currentWinner() == (Card('2', 'spades'), 'west')
+
+
+def test_getCard():
+    """should be able to get cards played"""
+    t = Trick(trump='hearts')
+    for p in Position.positions:
+        assert t.getCard(p) is None
+    for c in ('3d', '4d', '5d', '6d'):
+        t.nextCard(Card.fromCode(c))
+    assert t.north == Card.fromCode('3d')
+    assert t.east == Card.fromCode('4d')
+    assert t.south == Card.fromCode('5d')
+    assert t.west == Card.fromCode('6d')
+
+
+def test_getCard_leader_not_north():
+    """cards are indexed by who played them, not by trick order"""
+    t = Trick(leader='south')
+    for c in ('3d', '4d', '5d', '6d'):
+        t.nextCard(Card.fromCode(c))
+    assert t.south == Card.fromCode('3d')
+    assert t.west == Card.fromCode('4d')
+    assert t.north == Card.fromCode('5d')
+    assert t.east == Card.fromCode('6d')
+
+
+def test_repr_partial_trick():
+    t = Trick()
+    t.nextCard(Card.fromCode('3d'))
+    s = repr(t)  # unplayed seats must not blow up the printout
+    assert '3 of diamonds' in s

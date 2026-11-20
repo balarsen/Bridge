@@ -19,10 +19,17 @@ class Card(object):
             self.suit = Suit(suit)
 
     def __eq__(self, other):
+        if not isinstance(other, Card):
+            return NotImplemented
         return self.suit == other.suit and self.value == other.value
 
     def __ne__(self, other):
-        return ~(self == other)
+        if not isinstance(other, Card):
+            return NotImplemented
+        return not (self == other)
+
+    def __hash__(self):
+        return hash((self.suit, self.value))
 
     def __lt__(self, other):
         if self.trump and other.trump:  # both are trump

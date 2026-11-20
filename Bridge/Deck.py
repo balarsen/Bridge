@@ -23,8 +23,9 @@ class Deck(list):
             np.random.shuffle(self)
 
     def cut(self, place=None):
-        if place == None:
-            place = np.random.randint(1, 53)
+        if place is None:
+            # never 0 or len(self), those are no-op cuts
+            place = np.random.randint(1, len(self))
         dtmp = self[place:]
         dtmp.extend(self[:place])
         self[:] = dtmp

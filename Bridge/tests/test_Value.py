@@ -34,6 +34,17 @@ def test_lt():
     assert a < b
 
 
+def test_rank():
+    assert [Value(v).rank for v in Value.values] == list(range(13))
+    assert Value('0') < Value('J')  # ten is below the jack
+
+
+def test_hash_and_other_types():
+    assert len({Value('2'), Value('2'), Value('3')}) == 2
+    assert Value('2') != '2'
+    assert not Value('2') == '2'
+
+
 def test_str():
     assert str(Value('Q')) == 'Q'
 

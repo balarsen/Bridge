@@ -14,7 +14,10 @@ class Suit(object):
             return self.suit == other
 
     def __ne__(self, other):
-        return ~(self == other)
+        return not (self == other)
+
+    def __hash__(self):
+        return hash(self.suit)
 
     def __str__(self):
         return f"{self.suit}"

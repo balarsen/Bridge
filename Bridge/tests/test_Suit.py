@@ -22,6 +22,17 @@ def test_ne():
     assert a != 'clubs'
 
 
+def test_ne_equal_suits():
+    """equal suits must not be !="""
+    assert (Suit('spades') != Suit('spades')) is False
+    assert (Suit('spades') != 'spades') is False
+    assert (Suit('spades') != Suit('hearts')) is True
+
+
+def test_hash():
+    assert len({Suit('spades'), Suit('spades'), Suit('hearts')}) == 2
+
+
 def test_str():
     assert str(Suit('spades')) == 'spades'
 

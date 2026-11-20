@@ -1,36 +1,38 @@
-
 """
 class for a begining bridge player bidding
 
-the player will not open with less than 15
+the player will not open with less than 14 high card points
  - the player opens in the strongest suit
 """
 
-from . import Bid
-from . import Bidding
+from .Bid import Bid
+from .Bidding import Bidding_logic
 
-class BeginningBidder(Bidding.Bidding_logic):
+
+class BeginningBidder(Bidding_logic):
+    OPEN_HCP = 14
+
     def openBid(self):
-        # this bidder does not have 14 HCP they pass
-        if self.hand.hc <= 14:
-            return Bid.Bid('pass', 1)
-        else:
-            strongSuit = [v[0] for v in self.hand.strongest if v[1] == self.hand.strongest[0][1]]
-            longSuit = [v[0] for v in self.hand.longest if v[1] == self.hand.longest[0][1]]
-            # if the strongest suit is longest they bid that
-            if sum([v in longSuit for v in strongSuit]):
-                return Bid.Bid(1, max([v for v in strongSuit if v in longSuit]))
-            # if the longest is 5 and has at least a face card they bid that
-            for s in strongSuit:
-                if len(getattr(self.hand, s)) >= 5:
-                    return Bid.Bid(1, s)
-            # if we get here there is an issue
-            raise(NotImplementedError("Reached a bid we don't know how to do"))
+        # this bidder does not have enough points, they pass
+        if self.hand.hcp() < self.OPEN_HCP:
+            return Bid('pass')
+        strongest = self.hand.strongest()  # ties are in suit rank order, best first
+        longest = self.hand.longest()
+        strongSuit = [s for s, pts in strongest if pts == strongest[0][1]]
+        longSuit = [s for s, n in longest if n == longest[0][1]]
+        # if the strongest suit is also longest they bid that
+        both = [s for s in strongSuit if s in longSuit]
+        if both:
+            return Bid(1, both[0])
+        # the strongest suit is not longest, bid it if it is at least 5 long
+        for s in strongSuit:
+            if len(self.hand.get_suit(s)) >= 5:
+                return Bid(1, s)
+        # otherwise open the longest suit
+        return Bid(1, longSuit[0])
 
-    def raiseBid(self):
+    def raiseBid(self, bids=None):
         pass
 
-    def jumpBid(self):
+    def jumpBid(self, bids=None):
         pass
-
-
