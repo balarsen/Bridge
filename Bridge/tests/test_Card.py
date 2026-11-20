@@ -1,6 +1,8 @@
 import pytest
 
 from ..Card import Card
+from ..Suit import Suit
+from ..Value import Value
 
 
 def test_init():
@@ -11,6 +13,20 @@ def test_init():
         Card('bad', 'hearts')
     with pytest.raises(ValueError):
         Card('2', 'bad')
+
+
+def test_init_from_instances():
+    c = Card(Value('Q'), Suit('hearts'))
+    assert c == Card('Q', 'hearts')
+    assert c.value == Value('Q')
+    assert c.suit == 'hearts'
+
+
+def test_no_trump_state():
+    """whether a card is trump is a property of the trick, not the card"""
+    assert not hasattr(Card('4', 'spades'), 'trump')
+    with pytest.raises(TypeError):
+        Card('4', 'spades', trump=True)
 
 
 def test_eq():
@@ -27,7 +43,6 @@ def test_ne_equal_cards():
 
 def test_hash():
     assert len({Card('4', 'spades'), Card('4', 'spades'), Card('4', 'hearts')}) == 2
-    assert hash(Card('4', 'spades')) == hash(Card('4', 'spades', trump=True))
 
 
 def test_eq_other_types():
@@ -49,17 +64,8 @@ def test_gt():
     fourH = Card('4', 'hearts')
     twoH = Card('2', 'hearts')
     assert fourH > twoH
+    assert (twoH > fourH) is False
     assert (fourH > fourS) is False
-
-
-def test_gt_trump():
-    fourS = Card('4', 'spades', trump=True)
-    twoS = Card('2', 'spades', trump=True)
-    fourH = Card('4', 'hearts')
-    twoH = Card('2', 'hearts')
-    assert fourS > fourH
-    assert (fourH > fourS) is False
-    assert fourS > twoS
 
 
 def test_lt():
@@ -67,16 +73,25 @@ def test_lt():
     fourH = Card('4', 'hearts')
     twoH = Card('2', 'hearts')
     assert twoH < fourH
+    assert (fourH < twoH) is False
     assert (fourH < fourS) is False
 
 
-def test_lt_trump():
-    fourS = Card('4', 'spades', trump=True)
-    twoS = Card('2', 'spades', trump=True)
-    fourH = Card('4', 'hearts')
-    assert fourH < fourS
-    assert (fourS < fourH) is False
-    assert twoS < fourS
+def test_different_suits_do_not_compare():
+    """across suits both < and > are False, trump is decided by the Trick"""
+    aceS = Card('A', 'spades')
+    twoH = Card('2', 'hearts')
+    assert (aceS > twoH) is False
+    assert (aceS < twoH) is False
+    assert (twoH > aceS) is False
+    assert (twoH < aceS) is False
+
+
+def test_compare_other_types():
+    with pytest.raises(TypeError):
+        Card('4', 'spades') < 4
+    with pytest.raises(TypeError):
+        Card('4', 'spades') > 4
 
 
 def test_str():
@@ -88,8 +103,8 @@ def test_repr():
 
 
 def test_toCode():
-    fourS = Card('4', 'spades', trump=True)
-    twoS = Card('2', 'spades', trump=True)
+    fourS = Card('4', 'spades')
+    twoS = Card('2', 'spades')
     fourH = Card('4', 'hearts')
     twoH = Card('2', 'hearts')
     assert fourS.toCode() == '4s'

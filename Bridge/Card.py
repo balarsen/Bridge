@@ -5,10 +5,12 @@ from .Value import Value
 class Card(object):
     """
     A class to represent a Card
+
+    Cards only know their own suit and value.  Which card wins a trick depends
+    on the lead and the trump suit, that lives in Trick (see Trick.beats).
     """
 
-    def __init__(self, value, suit, trump=False):
-        self.trump = trump
+    def __init__(self, value, suit):
         if isinstance(value, Value):
             self.value = value
         else:
@@ -32,28 +34,18 @@ class Card(object):
         return hash((self.suit, self.value))
 
     def __lt__(self, other):
-        if self.trump and other.trump:  # both are trump
-            return self.value < other.value
-        elif self.trump:  # self is trump
-            return False
-        elif other.trump:  # other is trump
-            return True
-        elif self.suit == other.suit:  # same suits
-            return self.value < other.value
-        else:  # different suit, can't compare
-            return False
+        """
+        Only cards of the same suit are ordered, comparing cards of different
+        suits gives False for both < and >
+        """
+        if not isinstance(other, Card):
+            return NotImplemented
+        return self.suit == other.suit and self.value < other.value
 
     def __gt__(self, other):
-        if self.trump and other.trump:  # both are trump
-            return self.value > other.value
-        elif self.trump:  # self is trump
-            return True
-        elif other.trump:  # other is trump
-            return False
-        elif self.suit == other.suit:  # same suits
-            return self.value > other.value
-        else:  # different suit, can't compare
-            return False
+        if not isinstance(other, Card):
+            return NotImplemented
+        return self.suit == other.suit and self.value > other.value
 
     def __str__(self):
         return f"{self.value} of {self.suit}"

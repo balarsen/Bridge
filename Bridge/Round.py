@@ -20,9 +20,6 @@ class HandLogic(ABC):
     def __init__(self, hand, trump):
         self.hand = hand
         self.trump = trump
-        # TODO: trump is state on the Card, see PROJECT_MAP.md
-        for c in self.hand:
-            c.trump = c.suit == self.trump
 
     @abstractmethod
     def lead(self):
@@ -43,11 +40,10 @@ class simpleHigh(HandLogic):
         return max(self.hand, key=lambda c: (c.value.rank, -Suit.suits.index(str(c.suit))))
 
     def follow(self, trick):
-        best = trick.currentWinner()[0]
         in_suit = self.hand.get_suit(trick.leadSuit)
 
         if in_suit:  # we have some of what was led
-            if in_suit[0] > best:  # if we can beat it, do
+            if trick.wouldWin(in_suit[0]):  # if we can beat it, do
                 return in_suit[0]
             return in_suit[-1]  # otherwise play lowest card
 

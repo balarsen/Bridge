@@ -6,9 +6,19 @@ from .Hand import Hand
 from .Suit import Suit
 from .Value import Value
 
+# used by every Deck that is not given its own rng
+_default_rng = np.random.default_rng()
+
 
 class Deck(list):
-    def __init__(self, indeck=None, shuffle=None):
+    """
+    A deck of cards.
+
+    rng is the source of randomness for shuffle and cut: None uses a shared
+    generator, an int seed or a numpy Generator makes runs reproducible.
+    """
+    def __init__(self, indeck=None, shuffle=None, rng=None):
+        self.rng = _default_rng if rng is None else np.random.default_rng(rng)
         if indeck is None:
             for s, v in itertools.product(Suit.suits, Value.values):
                 self.append(Card(v, s))
@@ -20,12 +30,12 @@ class Deck(list):
 
     def shuffle(self, num=1):
         for i in range(num):
-            np.random.shuffle(self)
+            self.rng.shuffle(self)
 
     def cut(self, place=None):
         if place is None:
             # never 0 or len(self), those are no-op cuts
-            place = np.random.randint(1, len(self))
+            place = int(self.rng.integers(1, len(self)))
         dtmp = self[place:]
         dtmp.extend(self[:place])
         self[:] = dtmp
@@ -48,9 +58,9 @@ class Deck(list):
         return ''.join(c.toCode() for c in self)
 
     @staticmethod
-    def fromCode(inval):
+    def fromCode(inval, rng=None):
         """
         take a strong encoded with stringRep and make a deck
         """
         cards = [Card(v, Suit.letterToSuit(s)) for v, s in zip(inval[::2], inval[1::2])]
-        return Deck(cards)
+        return Deck(cards, rng=rng)

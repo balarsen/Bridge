@@ -18,15 +18,15 @@ class Bidding_logic(ABC):
 
     @abstractmethod
     def openBid(self):
-        pass
+        """the Bid to open the auction with"""
 
     @abstractmethod
     def raiseBid(self, bids=None):
-        pass
+        """the Bid to raise partner's bid with"""
 
     @abstractmethod
     def jumpBid(self, bids=None):
-        pass
+        """the Bid to jump to"""
 
 
 class Bidding(list):

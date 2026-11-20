@@ -48,6 +48,13 @@ def test_eq_ne(bids):
     assert bids['h1'] != 'hearts'
 
 
+def test_compare_other_types(bids):
+    with pytest.raises(TypeError):
+        bids['h1'] < 5
+    with pytest.raises(TypeError):
+        bids['h1'] > 5
+
+
 def test_hash(bids):
     assert len({bids['h1'], Bid(1, 'hearts'), bids['c1']}) == 2
 

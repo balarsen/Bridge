@@ -5,7 +5,7 @@ from ..Card import Card
 from ..Deck import Deck
 from ..Hand import Hand
 from ..Position import Position
-from ..Round import Round, simpleHigh
+from ..Round import HandLogic, Round, simpleHigh
 from ..Table import Table
 from ..Trick import Trick
 
@@ -26,6 +26,11 @@ def make_trick(leader, trump, codes):
 HAND = make_hand('As Ks 5s 2s Qd Jd 4d Kc 6c 3c 7c 5c Jc')
 # no clubs
 VOID_CLUBS = make_hand('As Ks 5s 2s Qh Jh 4h Kd 6d 3d 9d 8d 7d')
+
+
+def test_handlogic_is_abstract():
+    with pytest.raises(TypeError):
+        HandLogic(HAND, 'spades')
 
 
 class TestSimpleHigh:
@@ -76,22 +81,22 @@ class TestSimpleHigh:
         t = make_trick('north', 'clubs', '0c')
         assert simpleHigh(VOID_CLUBS, 'clubs').follow(t) == Card('2', 'spades')
 
-    def test_hand_cards_get_trump_flag(self):
+    def test_logic_does_not_change_the_hand(self):
         hand = make_hand('As Ks 5s 2s Qd Jd 4d Kc 6c 3c 7c 5c Jc')
-        simpleHigh(hand, 'clubs')
-        assert all(c.trump == (c.suit == 'clubs') for c in hand)
+        before = [dict(vars(c)) for c in hand]
+        logic = simpleHigh(hand, 'clubs')
+        logic.lead()
+        logic.follow(make_trick('north', 'clubs', '0d'))
+        assert [dict(vars(c)) for c in hand] == before
 
 
-def deal():
-    d = Deck()
-    d.shuffle(3)
-    return list(d.deal())
+def deal(rng):
+    return list(Deck(shuffle=3, rng=rng).deal())
 
 
 class TestRound:
     def test_play_trick_respects_leader(self):
-        np.random.seed(1)
-        hands = deal()
+        hands = deal(1)
         rnd = Round(Table(), hands, 'spades', [simpleHigh] * 4)
         expected_lead = rnd.logics[2].lead()  # south
         win = rnd.play_trick('south')
@@ -106,8 +111,7 @@ class TestRound:
             assert trick.getCard(seat) not in hand
 
     def test_play_all_thirteen(self):
-        np.random.seed(2)
-        hands = deal()
+        hands = deal(2)
         rnd = Round(Table(), hands, 'spades', [simpleHigh] * 4)
         ns, ew = rnd.play('west')
         assert ns + ew == 13
@@ -119,25 +123,30 @@ class TestRound:
         assert rnd.tricks[0].leader == 'west'
 
     def test_no_card_played_twice(self):
-        np.random.seed(3)
-        rnd = Round(Table(), deal(), 'hearts', [simpleHigh] * 4)
+        rnd = Round(Table(), deal(3), 'hearts', [simpleHigh] * 4)
         rnd.play()
         played = [c for t in rnd.tricks for c in t]
         assert len(set(played)) == 52
 
     @pytest.mark.parametrize('trump', ['spades', 'hearts', 'diamonds', 'clubs', 'notrump'])
     def test_every_trump_plays_out(self, trump):
-        np.random.seed(4)
+        rng = np.random.default_rng(4)
         for _ in range(20):
-            ns, ew = Round(Table(), deal(), trump, [simpleHigh] * 4).play()
+            ns, ew = Round(Table(), deal(rng), trump, [simpleHigh] * 4).play()
             assert ns + ew == 13
+
+    def test_same_seed_same_round(self):
+        a = Round(Table(), deal(5), 'spades', [simpleHigh] * 4)
+        b = Round(Table(), deal(5), 'spades', [simpleHigh] * 4)
+        assert a.play() == b.play()
+        assert a.winners == b.winners
 
     def test_stats(self):
         """given a fixed trump and rotating leads both sides should win the same number of tricks"""
-        np.random.seed(8675309)
+        rng = np.random.default_rng(8675309)
         stats = []
         for lead in range(2000):
-            rnd = Round(Table(), deal(), 'spades', [simpleHigh] * 4)
+            rnd = Round(Table(), deal(rng), 'spades', [simpleHigh] * 4)
             stats.append(rnd.play(Position.positions[lead % 4]))
         ns, ew = np.mean(stats, axis=0)
         assert ns + ew == pytest.approx(13)
@@ -150,8 +159,8 @@ class TestRound:
         off-suit cards could win a trick and seat 0 always led.  With real trick rules
         leading the highest card (often an ace that gets ruffed) is slightly a handicap.
         """
-        np.random.seed(8675309)
-        stats = [Round(Table(), deal(), 'spades', [simpleHigh] * 4).play('north')
+        rng = np.random.default_rng(8675309)
+        stats = [Round(Table(), deal(rng), 'spades', [simpleHigh] * 4).play('north')
                  for _ in range(2000)]
         ns, ew = np.mean(stats, axis=0)
         assert ns + ew == pytest.approx(13)
