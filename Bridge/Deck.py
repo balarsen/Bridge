@@ -1,10 +1,8 @@
-import itertools
 import numpy as np
 
-from .Card import Card
+from .Card import ALL_CARDS, Card
 from .Hand import Hand
 from .Suit import Suit
-from .Value import Value
 
 # used by every Deck that is not given its own rng
 _default_rng = np.random.default_rng()
@@ -20,8 +18,7 @@ class Deck(list):
     def __init__(self, indeck=None, shuffle=None, rng=None):
         self.rng = _default_rng if rng is None else np.random.default_rng(rng)
         if indeck is None:
-            for s, v in itertools.product(Suit.suits, Value.values):
-                self.append(Card(v, s))
+            self.extend(ALL_CARDS)  # shared, immutable cards
         else:
             for c in indeck:
                 self.append(c)
@@ -62,5 +59,5 @@ class Deck(list):
         """
         take a strong encoded with stringRep and make a deck
         """
-        cards = [Card(v, Suit.letterToSuit(s)) for v, s in zip(inval[::2], inval[1::2])]
+        cards = [Card.fromCode(v + s) for v, s in zip(inval[::2], inval[1::2])]
         return Deck(cards, rng=rng)

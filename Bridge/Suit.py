@@ -1,13 +1,38 @@
 class Suit(object):
+    """
+    A suit.  There is exactly one `Suit` object per suit (`Suit('spades') is Suit('spades')`), it is immutable,
+    equal to its name, and `index` is its position in `Suit.suits`, the order spades, hearts, diamonds, clubs.
+    """
     suits = ('spades', 'hearts', 'diamonds', 'clubs')
     suits_set = set(suits)
+    indices = {s: i for i, s in enumerate(suits)}  # suit name or Suit -> index, for fast lookups
+    _instances = {}
 
-    def __init__(self, suit):
-        if suit not in Suit.suits_set:
-            raise(ValueError(f'Bad suit {Suit.suits}'))
-        self.suit = suit
+    def __new__(cls, suit):
+        if isinstance(suit, Suit):
+            return suit
+        instance = cls._instances.get(suit)
+        if instance is None:
+            if suit not in Suit.suits_set:
+                raise(ValueError(f'Bad suit {Suit.suits}'))
+            instance = object.__new__(cls)
+            object.__setattr__(instance, 'suit', suit)
+            object.__setattr__(instance, 'index', Suit.indices[suit])
+            cls._instances[suit] = instance
+        return instance
+
+    def __setattr__(self, name, value):
+        raise AttributeError('a Suit is immutable')
+
+    def __delattr__(self, name):
+        raise AttributeError('a Suit is immutable')
+
+    def __reduce__(self):
+        return (Suit, (self.suit,))  # copying and pickling give back the one instance
 
     def __eq__(self, other):
+        if other is self:
+            return True
         if isinstance(other, Suit):
             return self.suit == other.suit
         else:  # assume it is a string
@@ -36,3 +61,7 @@ class Suit(object):
             return ans[0]
         else:
             return ans
+
+
+for _suit in Suit.suits:  # create the four instances up front
+    Suit(_suit)

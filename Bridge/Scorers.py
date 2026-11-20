@@ -1,5 +1,7 @@
 from .Card import Card
 
+_SCORES = {'J': 1, 'Q': 2, 'K': 3, 'A': 4}
+
 
 class SimpleHighCardValue:
     """
@@ -26,11 +28,7 @@ class SimpleHighCardValue:
 
     @staticmethod
     def cardScorer(card):
-        scores = {'J': 1,
-                  'Q': 2,
-                  'K': 3,
-                  'A': 4}
-        return scores.get(str(card.value), 0)
+        return _SCORES.get(str(card.value), 0)
 
     @staticmethod
     def getScores(inval):

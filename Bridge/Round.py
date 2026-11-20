@@ -6,7 +6,6 @@ It needs to have pluggable playstyle for each player seperately
 """
 
 from abc import ABC, abstractmethod
-import itertools
 
 from .Position import Position
 from .Suit import Suit
@@ -30,6 +29,15 @@ class HandLogic(ABC):
         """return the card to play given the Trick so far, trick[0] is the lead"""
 
 
+def _rank(card):
+    return card.rank
+
+
+def _lead_key(card):
+    # highest value, ties go to the higher ranking suit (lower suit index): one integer instead of a tuple
+    return card.rank * 4 - card.suit_index
+
+
 class simpleHigh(HandLogic):
     """
     this player leads their highest card, when following they win if they can
@@ -37,7 +45,7 @@ class simpleHigh(HandLogic):
     """
     def lead(self):
         # highest value, ties go to the higher ranking suit
-        return max(self.hand, key=lambda c: (c.value.rank, -Suit.suits.index(str(c.suit))))
+        return max(self.hand, key=_lead_key)
 
     def follow(self, trick):
         in_suit = self.hand.get_suit(trick.leadSuit)
@@ -52,7 +60,7 @@ class simpleHigh(HandLogic):
             trumps = self.hand.get_suit(self.trump)
             if trumps:
                 return trumps[-1]  # play the smallest trump
-        return min(self.hand, key=lambda c: c.value.rank)
+        return min(self.hand, key=_rank)
 
 
 class Round(object):
@@ -71,8 +79,9 @@ class Round(object):
     def play_trick(self, leader):
         """play one trick, returns (winning card, winning position)"""
         trick = Trick(leader, self.trump)
-        for ii, seat in enumerate(itertools.islice(Position.cycle(leader), 4)):
-            ind = Position.positions.index(seat)
+        first = Position.pos2index('north', trick.leader)  # table index of the leader, hands and logics are in table order
+        for ii in range(4):
+            ind = (first + ii) % 4
             logic = self.logics[ind]
             card = logic.lead() if ii == 0 else logic.follow(trick)
             trick.nextCard(card)

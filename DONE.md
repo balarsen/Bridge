@@ -2,6 +2,24 @@
 
 Completed work, newest first. The live map and open items are in [PROJECT_MAP.md](PROJECT_MAP.md).
 
+## 2026-11-20 — the object classes made cheaper, API unchanged
+
+230 tests (35 new), 100% statement and branch coverage. **All 195 tests that existed before pass unchanged**, including the 800-case equivalence of `FastRound` with `Round` and the checks of `Simulation` against `Deck`/`Hand`.
+
+**Measured (one thread, `Deck(shuffle=3)` + `Round.play`): 454 us per round before, 183 us after, 2.5x** (5,460 rounds/s against 2,200); playing the 13 tricks went from 386 us to 143 us. Through the harness on 6 workers the object path does 15,300 rounds/s (it was 9,700), identical results at every worker count. Micro-costs: `Deck()` 25.5 -> 0.4 us, `Hand.get_suit` 6.3 -> 0.3, `Hand.distro` 20.9 -> 1.0, `Hand.balanced` 22 -> 0.9, `Position.pos2index` 0.8 -> 0.2.
+
+What changed, and why each made it faster:
+- **`Suit` and `Value` are interned** (one object per suit and value) with `index` and `rank` precomputed; `Value.rank` was a linear `tuple.index` on every call.
+- **`Card` is immutable** with `suit_index`, `rank` and `code` (= its position in an unshuffled deck) computed once; comparisons are integer arithmetic instead of calls to `Suit.__eq__` and `Value.__eq__`. The 52 cards are created once (`Card.ALL_CARDS`) and shared: `Deck()` is a list copy and `Card.fromCode`/`Deck.fromCode` hand out the shared objects.
+- **`Hand` keeps a per-suit sorted cache**, built on first use, updated by `remove` and dropped by every other way of changing the list (`append`, `extend`, `insert`, `pop`, `clear`, item and slice assignment and deletion, `+=`, `*=`), so it still behaves exactly like the list it subclasses. `get_suit`, `distro`, `longest`, `strongest`, `balanced` are lookups instead of a filter and a sort over 13 cards. `Hand.remove` and `Trick.nextCard` compare card codes instead of calling `Card.__eq__` on every card they pass.
+- **`Position` helpers** (`name`, `cycle`, `index2pos`, `pos2index`, `side`) are dict lookups and no longer build validation objects; `Trick` finds its winner in one pass and remembers where it is; `Round.play_trick` walks the seats by index; the scoring dict is a module constant.
+
+Two small API notes: assigning to an attribute of a `Card`, `Suit` or `Value` now raises `AttributeError` (nothing did), and `Position.name` is new. Nothing else a caller can see changed.
+
+**Why 2.5x and not the 7.8x of the scratch prototype:** the prototype also replaced `Trick`, `Hand` and `Round` with leaner specialised classes (no `list` subclasses, trick state kept incrementally, no position names in the records). That changes the structure, not just the representation, so it stays an optional item on the map; `FastRound` covers `simpleHigh` at 5.6x faster still. I left `Deck.shuffle` alone: its three `Generator.shuffle` calls are 33 of the remaining 35 us of building a deck, but switching algorithm would change which cards a given seed produces.
+
+New tests (`test_ObjectModel.py`): interning, immutability, copy and pickle returning the one instance, the shared cards, `fromCode` for codes outside the 52, subclass equality, `get_suit` against the old filter-and-sort on 20 random hands, every list mutator (12 cases) against that reference, duplicate cards, `remove` errors, copies of a hand, `Position.name`, `Trick.trump` changes.
+
 ## 2026-11-20 — map cleaned: finished plans and settled decisions moved here
 
 From now on every finished item moves from PROJECT_MAP.md to this file (see the rule at the top of the map). What moved in this first pass:

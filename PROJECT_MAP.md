@@ -11,7 +11,7 @@ Goal (README): automatically play bridge and collect statistics on various strat
 | Python | 3.14 pinned (`.python-version`), `requires-python >=3.12` |
 | Tooling | uv; `uv sync`, `uv run pytest`; `pyproject.toml` + `uv.lock` |
 | Dependencies | runtime: numpy, numba. groups: `dev` (pytest, pytest-cov), `notebooks` (notebook, pandas, scipy, seaborn, matplotlib, nbstripout, pymc, arviz) |
-| Tests | **195 pass**, `filterwarnings = error`, so any warning fails the suite |
+| Tests | **230 pass**, `filterwarnings = error`, so any warning fails the suite |
 | Coverage | **100% statement and branch** of `Bridge/` (`.coveragerc`: `source = Bridge`, `branch = True`, tests omitted); `uv run pytest --cov=Bridge --cov-report=html` writes `htmlcov/` |
 | CI | `.github/workflows/ci.yml`, Python 3.12 / 3.13 / 3.14, dev group only; green on every push so far |
 | Remote | `origin` = github.com/balarsen/Bridge, `master` |
@@ -23,10 +23,10 @@ All code is in `Bridge/`. Seats are lower-case strings (`'north'`...), a `Positi
 ### Cards and hands
 | Module | Role | Notes |
 |---|---|---|
-| `Suit.py` | `Suit`, order spades, hearts, diamonds, clubs; `letterToSuit` | equals its string; hashable |
-| `Value.py` | `Value`, `'0'` is ten; `rank` 0..12 | hashable |
-| `Card.py` | `Card(value, suit)`; `toCode`/`fromCode` | a card is only suit + value, no trump state. `<`/`>` are same-suit only (cross-suit gives False for both), so it is not a total order |
-| `Hand.py` | `Hand(list)`, exactly 13 cards at creation; `get_suit`, `clubs()`..., `highCard(suit)`, `lowCard(suit)`, `distro()`, `hcp()`, `longest()`, `strongest()`, `balanced()` | `Hand` shrinks as cards are played and remembers nothing; the 13 check is only at creation |
+| `Suit.py` | `Suit`, order spades, hearts, diamonds, clubs; `index`; `letterToSuit` | one immutable object per suit (`Suit('spades') is Suit('spades')`); equals and hashes like its name |
+| `Value.py` | `Value`, `'0'` is ten; `rank` 0..12 | one immutable object per value, hashable |
+| `Card.py` | `Card(value, suit)`; `toCode`/`fromCode`; `suit_index`, `rank`, `code` (= position in an unshuffled deck); `ALL_CARDS` | immutable (assigning an attribute raises), the 52 cards are created once and shared by `Deck` and `fromCode`. `<`/`>` are same-suit only (cross-suit gives False for both), so it is not a total order |
+| `Hand.py` | `Hand(list)`, exactly 13 cards at creation; `get_suit`, `clubs()`..., `highCard(suit)`, `lowCard(suit)`, `distro()`, `hcp()`, `longest()`, `strongest()`, `balanced()` | still a plain list in deal order; keeps a per-suit sorted cache (built on first use, updated by `remove`, dropped by any other list change). It shrinks as cards are played and remembers nothing else; the 13 check is only at creation |
 | `Deck.py` | `Deck(list)`; `shuffle`, `cut`, `deal`, `toCode`/`fromCode`; `rng` parameter | `rng=None` shares one module-level generator, an int or `Generator` gives reproducible decks |
 | `Scorers.py` | `SimpleHighCardValue` (J1 Q2 K3 A4) over a deck or hands | `Hand.hcp()` uses its `cardScorer` |
 
@@ -39,7 +39,7 @@ All code is in `Bridge/`. Seats are lower-case strings (`'north'`...), a `Positi
 ### Seats and play
 | Module | Role | Notes |
 |---|---|---|
-| `Position.py` | `Position`; `cycle`, `index2pos`, `pos2index`, `side` | single source of truth for seats |
+| `Position.py` | `Position`; `name`, `cycle`, `index2pos`, `pos2index`, `side` | single source of truth for seats; the helpers are dict lookups and build no objects |
 | `Table.py` | `Seat` (position + score), `Table` (north/east/south/west) | scores are stored but never updated |
 | `Trick.py` | `beats(card, other, trump)`; `Trick(list)`: `nextCard`, `leadSuit`, `currentWinner`, `wouldWin`, `winner`, `getCard`, `north`... | all trump logic lives here |
 | `Round.py` | `HandLogic` ABC, `simpleHigh`, `Round` (`play_trick`, `play`, `tricks`, `winners`) | the readable reference; strategies are plugins; trump is a suit or `'notrump'`; no declarer/contract concept |
@@ -97,7 +97,7 @@ Probability (numpy only)                          Harness (numpy only; runs any 
 - The six open questions at the end of [PLAN_PLAYING.md](PLAN_PLAYING.md).
 
 ### Prerequisites shared with the playing plan
-- **TODO: rework `Hand` so strategies can count cards.** Today `Hand` is a `list` subclass that shrinks as cards are played and remembers nothing. Make it a small class that keeps the original 13 cards, the cards played so far (and by whom, in which trick), and what is still unseen, so a strategy can ask "which spades are still out?", "how many trumps have been played?". Keep the `get_suit`/`hcp`/`longest`/`strongest`/`balanced` API. Touches `Hand`, `Round` (which removes cards from hands today), `simpleHigh` and tests. Natural companion to the exact "unseen cards are hypergeometric" results in `Probability`, and the same change as the performance work on `Hand` below.
+- **TODO: rework `Hand` so strategies can count cards.** Today `Hand` is a `list` subclass that shrinks as cards are played and remembers nothing. Make it a small class that keeps the original 13 cards, the cards played so far (and by whom, in which trick), and what is still unseen, so a strategy can ask "which spades are still out?", "how many trumps have been played?". Keep the `get_suit`/`hcp`/`longest`/`strongest`/`balanced` API. Touches `Hand`, `Round` (which removes cards from hands today), `simpleHigh` and tests. Natural companion to the exact "unseen cards are hypergeometric" results in `Probability`. The per-suit cache that `Hand` already has is the part of this that the performance work covered; what is left is the memory of played cards.
 - **TODO: scoring and whole games** (contract, declarer, tricks over/under, vulnerability, doubles/redoubles, part-score and game bonuses, rubber/duplicate scoring, dealer and vulnerability rotation over a session). The expected score in the playing plan needs duplicate scoring first.
 - **TODO (soon): explicit RNG plumbing.** `Deck(rng=None)` shares one module-level generator across all decks, fine for scripts but not for a harness. Still needed: a harness or `Game` object that owns a `np.random.Generator` and passes it to every `Deck`; no use of the shared default inside library code paths; tests that the same seed reproduces a whole session. (`Harness` and `Simulation` already derive reproducible streams from a seed.)
 
@@ -119,17 +119,12 @@ Probability (numpy only)                          Harness (numpy only; runs any 
 |---|---|---|
 | `Simulation.deal_summaries` (numba) | 0.4 us/deal on one thread, 10M deals/s on 6 threads; 4M deals in 0.3 s | already fast; leave alone |
 | `Probability.hcp_pmf` | 7 ms cold, then cached | fine |
-| Object path: `Deck` + `Round.play` | 0.447 ms per round = 2,200 rounds/s/thread, 84% of it playing the 13 tricks | `FastRound` plays `simpleHigh` 14.5x faster, `Harness` adds 4.4-4.6x on 6 cores; the object classes themselves are item 2 |
+| Object path: `Deck` + `Round.play` | 0.183 ms per round = 5,460 rounds/s/thread (was 0.454 ms, 2,200/s); 15,300 rounds/s on 6 workers | `FastRound` still plays `simpleHigh` 5.6x faster than the objects; the rest of the gap to the 7.8x prototype is item 2 |
 | Notebook `HCP stats.ipynb` | 388 s of cell time; the two `fit_all` calls are 212 s + 114 s = 84%; PyMC 30 s; everything simulated or exact under 10 s | the fitting code, not the simulation (item 1) |
 | `BeginningBidder.openBid` | 4.6 us | not worth touching |
 
 1. **TODO: speed up the distribution fitting (the notebook goes from about 6.5 min to about 1 min).** (a) Warm-start `fit_all(exact_pmf)` from the first fit's optimum instead of starting cold again (the 114 s call only shows the parameters barely move). (b) The objective builds a frozen scipy distribution on every evaluation: **528 us against 79 us for `stats.gamma.cdf(x, ...)` against 21 us for `scipy.special.gammainc`, 25x per evaluation**, identical results; use direct cdfs (`special.gammainc`, `erf`, `betainc`, `ndtr`). (c) The tolerances (xatol 1e-10, fatol 1e-15, 40,000 evaluations, 3 restarts, two optimizers per start) are far tighter than the 1e-6 differences reported; a cold gamma fit needs 200-430 evaluations. Loosen them and use one optimizer unless a family fails to converge (only Johnson SU needs the multi-start). (d) The 8 families are independent: fit them in parallel (`joblib`, already installed through PyMC; about 5x on 6 cores). (e) Cache the fits keyed on the pmf. PyMC (30 s) is mostly numba compile time per model plus the beta-binomial's slow sampling (14 s); low priority.
-2. **TODO: make the object classes cheaper without changing their API** (so strategies other than `simpleHigh` get the speedup too). Measured on a scratch prototype (not in the repo): an API-shaped version with pluggable strategy classes, a hand object with `get_suit`, trick and winner records and `Round.play` runs a round in 58 us against 455 us, **7.8x**, with identical results on 600 decks. The cost is Python object overhead: `Suit.__eq__` (about 760 calls per round, each with `isinstance`), `Card.__eq__` (about 250), `tuple.index` (about 625, from `Value.rank` and the suit ordering in `simpleHigh.lead`), `Hand.get_suit` sorting on every call (46 per round, 6-9 us each), `Position` string validation inside `Trick` and `index2pos`. Concretely:
-   - Make `Card` immutable (nothing mutates it since `trump` was removed) and create the 52 cards once; `Deck()` becomes a list copy (26 us now). Precompute `suit_index` and `rank` ints on the card and compare those in `Trick.beats` and `Hand.get_suit` instead of going through `Suit.__eq__`; intern `Suit` and `Value`.
-   - `Hand` keeps per-suit sorted lists, updated on removal (the same change as the `Hand` rework above): `get_suit` becomes O(1), and `distro`, `longest`, `strongest`, `balanced` come from one pass instead of 4 `get_suit` calls each (21-27 us each now).
-   - Integer positions internally (`Position` validates the string on every call).
-   - Pass one shared `Generator` to every `Deck` instead of `Deck(rng=int)`, which creates a new generator per deck (+23 us on an 86 us build). Ties to the RNG plumbing TODO.
-   - `SimpleHighCardValue.cardScorer` rebuilds a dict on every card: make it a module constant (tiny, but 85% of an opening-bid decision).
+2. **Low priority: the rest of the gap on the object path** (2.5x was reached with the API unchanged, a scratch prototype with leaner classes reached 7.8x). What is left needs structural changes: `Trick` and `Hand` as slotted classes rather than `list` subclasses, the trick winner kept as state while cards are played, trick and winner records without `Position` names, and an integer seat all the way through `Round`. Worth it only if strategies other than `simpleHigh` are run at scale (`FastRound` already covers `simpleHigh`). Usage note, not library: pass one shared `Generator` to every `Deck` instead of `Deck(rng=int)`, which builds a generator per deck (about 17 us of a 52 us build).
 3. **Low priority, only if we want billions of deals:** streaming reducers in the numba kernels (accumulate joint HCP counts, suit-length matrices and shape counts per thread and merge, so no per-deal arrays; today 100M deals would need 3.2 GB); compute `hcp`/`aces` in the kernel or `cached_property` (the `Deals` properties recompute on every access, sorting shapes for 16M hands takes about 1.2 s); a partial shuffle when only the two partner hands matter (up to 2x).
 4. **Decision later:** a compiled (numba or bitboard) play engine for strategies other than `simpleHigh`; the search-oriented one is part of [PLAN_PLAYING.md](PLAN_PLAYING.md). Cost: plain-Python strategies stay at object speed, so compile only what large comparisons need.
 5. **TODO: keep the numbers honest.** The figures above are one-off measurements. Add a small benchmark script (rounds/s, deals/s, notebook cell times from the executed notebook's timing metadata, which `nbconvert` records) to re-run before and after each change; not part of the CI gate.
