@@ -2,6 +2,15 @@
 
 Completed work, newest first. The live map and open items are in [PROJECT_MAP.md](PROJECT_MAP.md).
 
+## 2026-11-20 — integer round engine and the multiprocessing harness
+
+195 tests, 100% statement and branch coverage.
+
+- **`Bridge/FastRound.py`**: the fully inlined integer version of a round, as measured on a prototype first. Cards are `suit * 13 + rank` integers, hands are per-suit sorted lists, the trick winner is tracked incrementally; it plays `simpleHigh` at all four seats. Tested against `Round` + `simpleHigh` on 800 combinations of deck, trump (all four suits and notrump) and leader: identical tricks every time. 30,700 rounds/s against 2,110 for the objects (14.5x). The prototype also showed that an API-shaped restructuring of the object classes (pluggable strategies, hand object, trick records) would get 7.8x, which stays a TODO.
+- **`Bridge/Harness.py`**: `run_batches(task, n, seed, batch_size, workers, reduce, **config)`. The n items are cut into fixed-size batches, each batch gets one child of `SeedSequence(seed)`, results are put back in batch order, so **the answer depends only on `(seed, batch_size)`, never on the number of workers** (tested with real worker processes at 1, 2 and 3 workers). `workers=1`, or a single batch, runs the same code in-process. Workers use the `spawn` method everywhere and limit numba to one thread. Failures are re-raised as `HarnessError` naming the batch.
+- **Measured (6 cores, Windows):** `FastRound` 30,700 rounds/s on one worker, 136,000 on six (4.4x); the `Deck`/`Round` objects 2,110 to 9,700 (4.6x); a million rounds of `simpleHigh` against `simpleHigh` with a rotating leader in 7.6 s (mean 6.500 / 6.500 tricks per side). Results identical at every worker count. The pool costs about 0.8 s per call, and 2,000-round batches ran as fast as 100,000-round ones (my first guess, "batches of about 2 s", was too cautious).
+- **`PLAN_PLAYING.md`** rewritten with Brian's decisions (correct = highest bid met, confusion matrix of over/under bids, repeated play as weights, declarer sees own hand and dummy with perfect defenders, prove DDS then use it, uniform among equivalent cards, likelihood model for the auction, start with the exact suit-combination solver).
+
 ## 2026-11-20 — exact probabilities, fast simulation and the statistics notebook
 
 167 tests, **100% statement and branch coverage**. Pushed; CI (3.12 / 3.13 / 3.14) was green on the first GitHub run.
